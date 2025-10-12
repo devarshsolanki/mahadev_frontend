@@ -1,73 +1,201 @@
-# Welcome to your Lovable project
+# QuickCommerce Frontend
 
-## Project info
+Modern, responsive web application for the QuickCommerce grocery delivery platform built with React + Vite + TypeScript.
 
-**URL**: https://lovable.dev/projects/8ebba7df-e9cf-40e3-9563-36703f7c7b40
+## 🚀 Features Implemented
 
-## How can I edit this code?
+### Customer Features
+✅ OTP-based authentication with JWT refresh tokens  
+✅ Product browsing with filters, search, and categories  
+✅ Shopping cart with coupon system  
+✅ Digital wallet (add money, transactions, balance)  
+✅ Complete checkout flow  
+✅ Order management (list, track, cancel)  
+✅ User profile with address management  
 
-There are several ways of editing your application.
+### Admin Features (Scaffold)
+✅ Product CRUD operations  
+✅ Stock management  
 
-**Use Lovable**
+## 🛠️ Tech Stack
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/8ebba7df-e9cf-40e3-9563-36703f7c7b40) and start prompting.
+- **Framework**: React 18 + Vite
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS + shadcn/ui components
+- **State Management**: React Query (server state) + Context API (auth)
+- **Routing**: React Router v6
+- **Forms**: React Hook Form + Zod validation
+- **HTTP**: Axios with interceptors
+- **UI Components**: shadcn/ui (Radix UI primitives)
 
-Changes made via Lovable will be committed automatically to this repo.
+## 📦 Installation
 
-**Use your preferred IDE**
+```bash
+# Install dependencies
+npm install
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+# Create environment file
+cp .env.example .env
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+# Update .env with your backend URL
+# VITE_API_BASE=http://localhost:5000/api/v1
 
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Start development server
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+## 🔧 Environment Variables
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+Create a `.env` file in the root directory:
 
-**Use GitHub Codespaces**
+```env
+VITE_API_BASE=http://localhost:5000/api/v1
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## 📁 Project Structure
 
-## What technologies are used for this project?
+```
+src/
+├── api/                 # API client & typed endpoints
+│   ├── client.ts       # Axios instance with interceptors
+│   ├── types.ts        # TypeScript interfaces
+│   ├── auth.ts         # Auth API calls
+│   ├── products.ts     # Product & category APIs
+│   ├── cart.ts         # Cart management
+│   ├── orders.ts       # Order & checkout APIs
+│   ├── wallet.ts       # Wallet operations
+│   └── subscriptions.ts # Subscription management
+├── components/         # Reusable components
+│   ├── ui/            # shadcn/ui components
+│   ├── Navbar.tsx     # Navigation bar
+│   └── ProtectedRoute.tsx # Route guard
+├── context/           # React Context providers
+│   └── AuthContext.tsx # Authentication state
+├── pages/             # Route pages
+│   ├── Home.tsx       # Landing page
+│   ├── Auth.tsx       # Login/signup
+│   ├── Products.tsx   # Product listing
+│   ├── ProductDetail.tsx # Product details
+│   ├── Cart.tsx       # Shopping cart
+│   └── Wallet.tsx     # Digital wallet
+├── App.tsx            # Root component
+└── main.tsx           # Entry point
+```
 
-This project is built with:
+## 🎨 Design System
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+The app uses a custom design system defined in:
+- `src/index.css` - CSS variables for colors, gradients, shadows
+- `tailwind.config.ts` - Tailwind theme extensions
 
-## How can I deploy this project?
+**Color Palette:**
+- Primary: Fresh Green (HSL 140, 70%, 45%)
+- Secondary: Warm Orange (HSL 25, 90%, 55%)
+- Gradients: Hero gradient (green-to-teal), Warm gradient (orange-to-yellow)
 
-Simply open [Lovable](https://lovable.dev/projects/8ebba7df-e9cf-40e3-9563-36703f7c7b40) and click on Share -> Publish.
+## 🔐 Authentication
 
-## Can I connect a custom domain to my Lovable project?
+- **Method**: OTP-based phone authentication
+- **Token Storage**: In-memory access token + refresh token
+- **Auto-refresh**: Axios interceptor handles token refresh on 401
+- **Protected Routes**: Using `ProtectedRoute` wrapper component
 
-Yes, you can!
+### Production Security Note
+For production, switch to httpOnly cookies for refresh tokens:
+1. Update backend to send refreshToken in httpOnly cookie
+2. Remove refresh token from response body
+3. Axios will automatically include cookies in requests
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## 🔄 State Management
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+- **Server State**: React Query for API data, caching, and synchronization
+- **Auth State**: React Context for user session
+- **Local State**: useState/useReducer for component-level state
+
+## 📱 Responsive Design
+
+- Mobile-first approach
+- Breakpoints: sm (640px), md (768px), lg (1024px), xl (1280px)
+- Touch-friendly UI elements
+- Optimized images and lazy loading
+
+## 🧪 API Integration
+
+All backend endpoints are fully integrated. See `FRONTEND_API_MAPPING.md` for complete endpoint mapping.
+
+**Base URL**: Configured via `VITE_API_BASE` environment variable
+
+## 🚢 Deployment
+
+### Build for Production
+```bash
+npm run build
+```
+
+### Preview Production Build
+```bash
+npm run preview
+```
+
+### Docker Deployment
+```dockerfile
+FROM node:18-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+EXPOSE 8080
+CMD ["npm", "run", "preview", "--", "--host", "0.0.0.0", "--port", "8080"]
+```
+
+## 📝 Development Scripts
+
+```bash
+npm run dev          # Start dev server
+npm run build        # Build for production
+npm run preview      # Preview production build
+npm run lint         # Run ESLint
+```
+
+## 🎯 Next Steps
+
+### Essential Features to Complete
+- [ ] Checkout page with address selection and delivery slots
+- [ ] Orders page (list, detail, tracking)
+- [ ] Subscriptions management (create, pause, resume, cancel)
+- [ ] Profile page with address CRUD
+- [ ] Categories page with tree navigation
+- [ ] Admin panel pages
+
+### Enhancements
+- [ ] Product image gallery/carousel
+- [ ] Product reviews and ratings
+- [ ] Order tracking with real-time updates
+- [ ] Push notifications
+- [ ] PWA capabilities (service worker, offline support)
+- [ ] E2E tests with Playwright
+- [ ] CI/CD pipeline (GitHub Actions)
+
+## 📚 Key Libraries
+
+- `axios` - HTTP client with interceptors
+- `@tanstack/react-query` - Server state management
+- `react-router-dom` - Routing
+- `react-hook-form` - Form handling
+- `zod` - Schema validation
+- `date-fns` - Date formatting
+- `sonner` - Toast notifications
+- `lucide-react` - Icons
+
+## 🤝 Backend Integration
+
+This frontend integrates with QuickCommerce Backend API (Node.js + Express + MongoDB).
+
+**Backend Repository**: Connect to `http://localhost:5000/api/v1`
+
+Ensure backend is running before starting frontend development.
+
+## 📄 License
+
+MIT
