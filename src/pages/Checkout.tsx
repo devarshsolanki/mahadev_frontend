@@ -20,6 +20,7 @@ const Checkout = () => {
   const queryClient = useQueryClient();
   const [selectedAddress, setSelectedAddress] = useState('');
   const [selectedSlot, setSelectedSlot] = useState('');
+  const NO_SLOT_VALUE = '__no_slot';
   const [paymentMethod, setPaymentMethod] = useState<'wallet' | 'cod' | 'card' | 'upi'>('cod');
   const [walletPIN, setWalletPIN] = useState('');
 
@@ -141,23 +142,24 @@ const Checkout = () => {
           <Card className="p-6">
             <h2 className="text-xl font-semibold mb-4">Delivery Slot (Optional)</h2>
 
-            <Select value={selectedSlot} onValueChange={setSelectedSlot}>
+            <Select value={selectedSlot || NO_SLOT_VALUE} onValueChange={(v) => setSelectedSlot(v === NO_SLOT_VALUE ? '' : v)}>
               <SelectTrigger>
                 <SelectValue placeholder="Select delivery slot" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">No preference</SelectItem>
-                {deliverySlots?.data?.map((slot: any) => (
-                  slot.slots.map((timeSlot: any) => (
-                    timeSlot.available && (
-                      <SelectItem
-                        key={`${slot.date}-${timeSlot.time}`}
-                        value={JSON.stringify({ date: slot.date, time: timeSlot.time })}
-                      >
-                        {slot.date} - {timeSlot.time}
-                      </SelectItem>
-                    )
-                  ))
+                <SelectItem value={NO_SLOT_VALUE}>No preference</SelectItem>
+                {deliverySlots?.data?.slots.map((slot: any) => (
+                  slot.available && (
+                    <SelectItem
+                      key={`${deliverySlots.data.date}-${slot.startTime}`}
+                      value={JSON.stringify({ 
+                        date: deliverySlots.data.date, 
+                        time: `${slot.startTime}-${slot.endTime}` 
+                      })}
+                    >
+                      {deliverySlots.data.date} - {slot.startTime} to {slot.endTime}
+                    </SelectItem>
+                  )
                 ))}
               </SelectContent>
             </Select>

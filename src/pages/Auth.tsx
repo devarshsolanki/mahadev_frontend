@@ -10,27 +10,29 @@ import { toast } from 'sonner';
 import { Loader2, ArrowLeft } from 'lucide-react';
 
 const Auth = () => {
-  const [step, setStep] = useState<'phone' | 'otp' | 'name'>('phone');
+  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
+  const [step, setStep] = useState<'phone' | 'otp'>('phone');
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
   const [name, setName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isNewUser, setIsNewUser] = useState(false);
+  const [tempAuthData, setTempAuthData] = useState<any>(null);
 
-  const { login } = useAuth();
+  const { login, completeRegistration } = useAuth();
   const navigate = useNavigate();
 
   const handleSendOTP = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!/^\+?[1-9]\d{9,14}$/.test(phone)) {
-      toast.error('Please enter a valid phone number');
+
+    const fullPhone = `+91${phone}`;
+    if (!/^\+?[1-9]\d{9,14}$/.test(fullPhone)) {
+      toast.error('Please enter a valid 10-digit phone number');
       return;
     }
 
     setIsLoading(true);
     try {
-      await authApi.sendOTP(phone);
+      await authApi.sendOTP(fullPhone);
       toast.success('OTP sent successfully!');
       setStep('otp');
     } catch (error: any) {
@@ -50,47 +52,27 @@ const Auth = () => {
 
     setIsLoading(true);
     try {
-      // Try to verify OTP first
-      const response = await authApi.verifyOTP(phone, otp);
-      
-      // If user is new, they need to provide name
-      if (!response.data.user.name || response.data.user.name === 'New User') {
-        setIsNewUser(true);
-        setStep('name');
-        setIsLoading(false);
-        return;
-      }
-
-      // Existing user - complete login
-      await login(phone, otp);
-      navigate('/');
-    } catch (error: any) {
-      // Check if error indicates new user
-      if (error.message?.includes('name')) {
-        setIsNewUser(true);
-        setStep('name');
+      const fullPhone = `+91${phone}`;
+      const data = await login(fullPhone, otp, authMode === 'signup' ? name : undefined);
+      if (data.isNewUser) {
+        if (authMode === 'login') {
+          toast.error("Account not found. Please create an account.");
+          setStep('phone');
+          setAuthMode('signup');
+          return;
+        }
+        navigate('/');
       } else {
-        toast.error(error.message || 'Invalid OTP');
+        if (authMode === 'signup') {
+          toast.error("Account already exists. Please log in.");
+          setStep('phone');
+          setAuthMode('login');
+          return;
+        }
+        navigate('/');
       }
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleCompleteName = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!name.trim()) {
-      toast.error('Please enter your name');
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      await login(phone, otp, name);
-      navigate('/');
     } catch (error: any) {
-      toast.error(error.message || 'Failed to complete registration');
+      // Error is already handled in login function
     } finally {
       setIsLoading(false);
     }
@@ -99,7 +81,8 @@ const Auth = () => {
   const handleResendOTP = async () => {
     setIsLoading(true);
     try {
-      await authApi.resendOTP(phone);
+      const fullPhone = `+91${phone}`;
+      await authApi.resendOTP(fullPhone);
       toast.success('OTP resent successfully!');
     } catch (error: any) {
       toast.error(error.message || 'Failed to resend OTP');
@@ -107,6 +90,13 @@ const Auth = () => {
       setIsLoading(false);
     }
   };
+
+  const resetForm = () => {
+    setStep('phone');
+    setPhone('');
+    setOtp('');
+    setName('');
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center gradient-subtle p-4">
@@ -124,35 +114,47 @@ const Auth = () => {
               </Button>
             )}
             <div className="h-10 w-10 rounded-lg gradient-hero" />
-            <span className="ml-2 text-xl font-bold">QuickCommerce</span>
+            <span className="ml-2 text-xl font-bold">Mahadev shop</span>
           </div>
           <CardTitle className="text-2xl">
-            {step === 'phone' && 'Welcome'}
+            {step === 'phone' && (authMode === 'login' ? 'Login' : 'Create Account')}
             {step === 'otp' && 'Enter OTP'}
-            {step === 'name' && 'Complete Your Profile'}
           </CardTitle>
           <CardDescription>
-            {step === 'phone' && 'Enter your phone number to get started'}
-            {step === 'otp' && `Enter the OTP sent to ${phone}`}
-            {step === 'name' && 'Tell us your name to complete registration'}
+            {step === 'phone' && (authMode === 'login' ? 'Enter your phone number to login' : 'Enter your details to create an account')}
+            {step === 'otp' && `Enter the OTP sent to +91${phone}`}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {step === 'phone' && (
             <form onSubmit={handleSendOTP} className="space-y-4">
+              {authMode === 'signup' && (
+                <div className="space-y-2">
+                  <Label htmlFor="name">Full Name</Label>
+                  <Input
+                    id="name"
+                    type="text"
+                    placeholder="John Doe"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                  />
+                </div>
+              )}
               <div className="space-y-2">
                 <Label htmlFor="phone">Phone Number</Label>
-                <Input
-                  id="phone"
-                  type="tel"
-                  placeholder="+919876543210"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  required
-                />
-                <p className="text-xs text-muted-foreground">
-                  Include country code (e.g., +91 for India)
-                </p>
+                <div className="flex items-center">
+                  <span className="p-2 border border-r-0 rounded-l-md bg-gray-100">+91</span>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    placeholder="9876543210"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                    required
+                    className="rounded-l-none"
+                  />
+                </div>
               </div>
               <Button type="submit" className="w-full btn-primary" disabled={isLoading}>
                 {isLoading ? (
@@ -164,6 +166,18 @@ const Auth = () => {
                   'Send OTP'
                 )}
               </Button>
+              <p className="text-sm text-center">
+                {authMode === 'login' ? "Don't have an account?" : "Already have an account?"}{' '}
+                <Button
+                  variant="link"
+                  onClick={() => {
+                    setAuthMode(authMode === 'login' ? 'signup' : 'login');
+                    resetForm();
+                  }}
+                >
+                  {authMode === 'login' ? 'Sign up' : 'Login'}
+                </Button>
+              </p>
             </form>
           )}
 
@@ -202,32 +216,6 @@ const Auth = () => {
                 disabled={isLoading}
               >
                 Resend OTP
-              </Button>
-            </form>
-          )}
-
-          {step === 'name' && (
-            <form onSubmit={handleCompleteName} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Full Name</Label>
-                <Input
-                  id="name"
-                  type="text"
-                  placeholder="John Doe"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                />
-              </div>
-              <Button type="submit" className="w-full btn-primary" disabled={isLoading}>
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Completing...
-                  </>
-                ) : (
-                  'Complete Registration'
-                )}
               </Button>
             </form>
           )}

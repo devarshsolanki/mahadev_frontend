@@ -140,7 +140,11 @@ const OrderDetail = () => {
                   <div className="w-20 h-20 bg-muted rounded-lg overflow-hidden flex-shrink-0">
                     {item.product.images?.[0] && (
                       <img
-                        src={item.product.images[0]}
+                        src={
+                          Array.isArray(item.product.images) && item.product.images.length
+                            ? (typeof item.product.images[0] === 'string' ? item.product.images[0] : (item.product.images[0] as any).url)
+                            : undefined
+                        }
                         alt={item.product.name}
                         className="w-full h-full object-cover"
                       />

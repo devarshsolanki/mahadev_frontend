@@ -3,8 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { categoriesApi } from '@/api/products';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ShoppingBag, ChevronRight } from 'lucide-react';
-import { Category } from '@/api/types';
 
 const Categories = () => {
   const navigate = useNavigate();
@@ -18,10 +16,10 @@ const Categories = () => {
     return (
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold mb-8">Categories</h1>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[...Array(6)].map((_, i) => (
-            <Card key={i} className="p-6">
-              <Skeleton className="h-32 w-full" />
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-4">
+          {[...Array(9)].map((_, i) => (
+            <Card key={i} className="overflow-hidden rounded-xl shadow-sm">
+              <Skeleton className="h-40 w-full" />
             </Card>
           ))}
         </div>
@@ -29,62 +27,82 @@ const Categories = () => {
     );
   }
 
-  const categoriesData = categories?.data || [];
+  const categoryList = categories?.data || [];
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Shop by Category</h1>
-        <p className="text-muted-foreground">Browse our wide range of products organized by category</p>
-      </div>
+    <div className="container mx-auto px-4 py-8 space-y-10">
+      <h1 className="text-3xl font-bold mb-6">Shop by Category</h1>
 
-      <div className="space-y-8">
-        {categoriesData.map((category: Category) => (
+      {/* Main Category Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        {categoryList.map((category) => (
           <div key={category._id}>
             <Card
-              className="p-6 cursor-pointer card-hover mb-4"
+              className="relative h-40 rounded-2xl overflow-hidden cursor-pointer group transition-all"
               onClick={() => navigate(`/products?category=${category._id}`)}
             >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
-                    <ShoppingBag className="h-8 w-8 text-primary" />
-                  </div>
-                  <div>
-                    <h2 className="text-2xl font-bold">{category.name}</h2>
-                    {category.description && (
-                      <p className="text-muted-foreground mt-1">{category.description}</p>
-                    )}
-                  </div>
-                </div>
-                <ChevronRight className="h-6 w-6 text-muted-foreground" />
+              {/* Background Image */}
+              <img
+                src={
+                  category.image
+                    ? typeof category.image === "string"
+                      ? category.image
+                      : category.image
+                    : "/placeholder.svg"
+                }
+                alt={category.name}
+                className="absolute inset-0 h-full w-full object-cover group-hover:scale-105 transition-all duration-300"
+              />
+
+              {/* Overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-black/10"></div>
+
+              {/* Text */}
+              <div className="absolute bottom-3 left-3 text-white">
+                <h2 className="text-lg font-semibold">{category.name}</h2>
+                {category.children?.length > 0 && (
+                  <p className="text-xs opacity-80">
+                    {category.children.length} subcategories
+                  </p>
+                )}
               </div>
             </Card>
 
-            {/* Subcategories */}
+            {/* Subcategory Slider */}
             {category.children && category.children.length > 0 && (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 ml-4">
-                {category.children.map((subCategory: Category) => (
-                  <Card
-                    key={subCategory._id}
-                    className="p-4 cursor-pointer card-hover"
-                    onClick={() => navigate(`/products?category=${subCategory._id}`)}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                        <ShoppingBag className="h-5 w-5 text-primary" />
+              <div className="mt-4">
+                <h3 className="font-semibold mb-2 text-lg">{category.name} Subcategories</h3>
+
+                <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-2">
+                  {category.children.map((sub) => (
+                    <Card
+                      key={sub._id}
+                      className="min-w-[150px] h-36 rounded-xl overflow-hidden cursor-pointer relative group"
+                      onClick={() => navigate(`/products?category=${sub._id}`)}
+                    >
+                      {/* Background Image */}
+                      <img
+                        src={
+                          sub.image
+                            ? typeof sub.image === "string"
+                              ? sub.image
+                              : sub.image
+                            : "/placeholder.svg"
+                        }
+                        alt={sub.name}
+                        className="absolute inset-0 h-full w-full object-cover group-hover:scale-105 transition-all duration-300"
+                      />
+
+                      {/* Gradient */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-black/10"></div>
+
+                      {/* Text */}
+                      <div className="absolute bottom-2 left-2 text-white">
+                        <p className="text-sm font-medium">{sub.name}</p>
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <h3 className="font-semibold text-sm truncate">{subCategory.name}</h3>
-                        {subCategory.children && subCategory.children.length > 0 && (
-                          <p className="text-xs text-muted-foreground">
-                            {subCategory.children.length} subcategories
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </Card>
-                ))}
+                    </Card>
+                  ))}
+                </div>
               </div>
             )}
           </div>

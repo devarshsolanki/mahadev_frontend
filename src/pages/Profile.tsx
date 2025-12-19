@@ -18,8 +18,8 @@ const Profile = () => {
   const [email, setEmail] = useState('');
   const [addressForm, setAddressForm] = useState({
     label: '',
-    addressLine1: '',
-    addressLine2: '',
+    fullAddress: '',
+    landmark: '',
     city: '',
     state: '',
     pincode: '',
@@ -70,8 +70,8 @@ const Profile = () => {
   const resetAddressForm = () => {
     setAddressForm({
       label: '',
-      addressLine1: '',
-      addressLine2: '',
+      fullAddress: '',
+      landmark: '',
       city: '',
       state: '',
       pincode: '',
@@ -84,7 +84,7 @@ const Profile = () => {
   };
 
   const handleAddAddress = () => {
-    if (!addressForm.label || !addressForm.addressLine1 || !addressForm.city || !addressForm.state || !addressForm.pincode) {
+    if (!addressForm.label || !addressForm.fullAddress || !addressForm.city || !addressForm.state || !addressForm.pincode) {
       toast.error('Please fill all required fields');
       return;
     }
@@ -243,19 +243,19 @@ const Profile = () => {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="addressLine1">Address Line 1 *</Label>
+                      <Label htmlFor="fullAddress">Full Address *</Label>
                       <Input
-                        id="addressLine1"
-                        value={addressForm.addressLine1}
-                        onChange={(e) => setAddressForm({ ...addressForm, addressLine1: e.target.value })}
+                        id="fullAddress"
+                        value={addressForm.fullAddress}
+                        onChange={(e) => setAddressForm({ ...addressForm, fullAddress: e.target.value })}
                       />
                     </div>
                     <div>
-                      <Label htmlFor="addressLine2">Address Line 2</Label>
+                      <Label htmlFor="landmark">Landmark</Label>
                       <Input
-                        id="addressLine2"
-                        value={addressForm.addressLine2}
-                        onChange={(e) => setAddressForm({ ...addressForm, addressLine2: e.target.value })}
+                        id="landmark"
+                        value={addressForm.landmark}
+                        onChange={(e) => setAddressForm({ ...addressForm, landmark: e.target.value })}
                       />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
@@ -316,8 +316,8 @@ const Profile = () => {
                           {address.isDefault && <Badge>Default</Badge>}
                         </div>
                         <p className="text-sm">
-                          {address.addressLine1}
-                          {address.addressLine2 && `, ${address.addressLine2}`}
+                          {address.fullAddress}
+                          {address.landmark && `, Near ${address.landmark}`}
                         </p>
                         <p className="text-sm">
                           {address.city}, {address.state} - {address.pincode}

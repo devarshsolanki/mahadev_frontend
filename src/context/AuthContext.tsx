@@ -8,9 +8,10 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (phone: string, otp: string, name?: string) => Promise<void>;
+  login: (phone: string, otp: string, name?: string) => Promise<any>;
   logout: () => Promise<void>;
   refetchUser: () => Promise<void>;
+  completeRegistration: (name: string, tempAuthData: any) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -38,11 +39,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = async (phone: string, otp: string, name?: string) => {
     try {
       const { data } = await authApi.verifyOTP(phone, otp, name);
-      setTokens(data.accessToken, data.refreshToken);
-      setUser(data.user);
-      toast.success('Login successful!');
+      // If server returned access/refresh tokens, store them and set user regardless
+      // This covers both login and signup flows where the server issues tokens.
+      if (data.accessToken) {
+        setTokens(data.accessToken, data.refreshToken);
+        if (data.user) setUser(data.user);
+        if (data.isNewUser) {
+          toast.success('Registration successful!');
+        } else {
+          toast.success('Login successful!');
+        }
+      }
+      return data;
     } catch (error: any) {
       toast.error(error.message || 'Login failed');
+      throw error;
+    }
+  };
+
+  const completeRegistration = async (name: string, tempAuthData: any) => {
+    try {
+      setTokens(tempAuthData.accessToken, tempAuthData.refreshToken);
+      await authApi.updateProfile({ name });
+      await loadUser();
+      toast.success('Registration successful!');
+    } catch (error: any) {
+      toast.error(error.message || 'Registration failed');
+      clearTokens();
+      setUser(null);
       throw error;
     }
   };
@@ -72,6 +96,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         login,
         logout,
         refetchUser,
+        completeRegistration,
       }}
     >
       {children}

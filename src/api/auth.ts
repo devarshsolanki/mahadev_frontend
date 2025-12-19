@@ -1,62 +1,52 @@
 import { apiClient, formatApiError } from './client';
 import { ApiResponse, AuthResponse, User } from './types';
+import { AxiosPromise } from 'axios';
+
+/**
+ * A generic request handler to reduce boilerplate.
+ * It handles the try-catch block, formats errors, and normalizes the response payload.
+ */
+async function handleRequest<T>(
+  request: AxiosPromise<ApiResponse<T>>,
+  payloadSelector: (data: ApiResponse<T> | T) => T = (data: any) => data.data ?? data.user ?? data
+) {
+  try {
+    const { data } = await request;
+    const payload = payloadSelector(data);
+    return { success: true, data: payload };
+  } catch (error) {
+    throw new Error(formatApiError(error));
+  }
+}
 
 export const authApi = {
   sendOTP: async (phone: string) => {
-    try {
-      const { data } = await apiClient.post<ApiResponse<{ message: string }>>('/auth/send-otp', { phone });
-      return { success: true, data: data.data };
-    } catch (error) {
-      throw new Error(formatApiError(error));
-    }
+    return handleRequest(apiClient.post('/auth/send-otp', { phone }));
   },
 
   verifyOTP: async (phone: string, otp: string, name?: string) => {
-    try {
-      const { data } = await apiClient.post<ApiResponse<AuthResponse>>('/auth/verify-otp', {
+    // verify-otp returns tokens and isNewUser at the top-level of the response.
+    // Use a payloadSelector that returns the full response object so callers
+    // (like AuthContext.login) receive accessToken/refreshToken/isNewUser/user.
+    return handleRequest<AuthResponse>(
+      apiClient.post('/auth/verify-otp', {
         phone,
         otp,
         name,
-      });
-      return { success: true, data: data.data };
-    } catch (error) {
-      throw new Error(formatApiError(error));
-    }
+      }),
+      // return the entire response payload instead of only nested `data.user`
+      (data) => data as any
+    );
   },
 
   resendOTP: async (phone: string) => {
-    try {
-      const { data } = await apiClient.post<ApiResponse<{ message: string }>>('/auth/resend-otp', { phone });
-      return { success: true, data: data.data };
-    } catch (error) {
-      throw new Error(formatApiError(error));
-    }
+    return handleRequest(apiClient.post('/auth/resend-otp', { phone }));
   },
 
-  getProfile: async () => {
-    try {
-      const { data } = await apiClient.get<ApiResponse<User>>('/auth/profile');
-      return { success: true, data: data.data };
-    } catch (error) {
-      throw new Error(formatApiError(error));
-    }
-  },
+  getProfile: async () => handleRequest<User>(apiClient.get('/auth/profile')),
 
-  updateProfile: async (profileData: Partial<User>) => {
-    try {
-      const { data } = await apiClient.put<ApiResponse<User>>('/auth/profile', profileData);
-      return { success: true, data: data.data };
-    } catch (error) {
-      throw new Error(formatApiError(error));
-    }
-  },
+  updateProfile: async (profileData: Partial<User>) =>
+    handleRequest<User>(apiClient.put('/auth/profile', profileData)),
 
-  logout: async () => {
-    try {
-      const { data } = await apiClient.post<ApiResponse<any>>('/auth/logout');
-      return { success: true, data: data.data };
-    } catch (error) {
-      throw new Error(formatApiError(error));
-    }
-  },
+  logout: async () => handleRequest(apiClient.post('/auth/logout')),
 };

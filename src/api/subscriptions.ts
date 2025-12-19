@@ -1,76 +1,179 @@
 import { apiClient, formatApiError } from './client';
 import { ApiResponse, Subscription } from './types';
 
+export interface SubscriptionCreatePayload {
+  items: Array<{
+    productId: string;
+    quantity: number;
+    variantId?: string;
+  }>;
+  frequency: 'daily' | 'weekly' | 'monthly';
+  deliveryTime: {
+    hour: number;
+    minute: number;
+  };
+  deliveryDays?: number[]; // For weekly subscriptions (0=Sunday, 6=Saturday)
+  deliveryDate?: number; // For monthly subscriptions (1-31)
+  deliveryAddressId: string;
+  paymentMethod?: 'wallet' | 'cod' | 'card' | 'upi';
+  customerNotes?: string;
+  startDate?: string;
+}
+
+export interface SubscriptionUpdatePayload {
+  deliveryTime?: {
+    hour: number;
+    minute: number;
+  };
+  deliveryDays?: number[];
+  deliveryDate?: number;
+  customerNotes?: string;
+}
+
+export interface PauseSubscriptionPayload {
+  reason?: string;
+  resumeDate?: string; // ISO date string
+}
+
 export const subscriptionsApi = {
-  getSubscriptions: async () => {
+  // Get all subscriptions for current user
+  getSubscriptions: async (status?: string) => {
     try {
-      const { data } = await apiClient.get<ApiResponse<Subscription[]>>('/subscriptions');
+      const params = new URLSearchParams();
+      if (status) params.append('status', status);
+
+      const { data } = await apiClient.get<ApiResponse<Subscription[]>>(
+        `/subscriptions${params.toString() ? '?' + params.toString() : ''}`
+      );
       return { success: true, data: data.data };
     } catch (error) {
       throw new Error(formatApiError(error));
     }
   },
 
-  getSubscriptionById: async (id: string) => {
+  // Get single subscription by ID
+  getSubscriptionById: async (subscriptionId: string) => {
     try {
-      const { data } = await apiClient.get<ApiResponse<Subscription>>(`/subscriptions/${id}`);
+      const { data } = await apiClient.get<ApiResponse<Subscription>>(
+        `/subscriptions/${subscriptionId}`
+      );
       return { success: true, data: data.data };
     } catch (error) {
       throw new Error(formatApiError(error));
     }
   },
 
-  createSubscription: async (subscriptionData: {
-    items: Array<{ product: string; quantity: number }>;
-    frequency: 'daily' | 'weekly' | 'monthly';
-    deliveryAddressId: string;
-    startDate: string;
-    weeklySchedule?: number[];
-    monthlyDates?: number[];
-  }) => {
+  // Create new subscription
+  createSubscription: async (payload: SubscriptionCreatePayload) => {
     try {
-      const { data } = await apiClient.post<ApiResponse<Subscription>>('/subscriptions', subscriptionData);
+      // Validate payload structure
+      if (!payload.items || payload.items.length === 0) {
+        throw new Error('At least one item is required');
+      }
+
+      if (!payload.frequency || !['daily', 'weekly', 'monthly'].includes(payload.frequency)) {
+        throw new Error('Invalid frequency');
+      }
+
+      if (!payload.deliveryAddressId) {
+        throw new Error('Delivery address is required');
+      }
+
+      if (!payload.deliveryTime) {
+        throw new Error('Delivery time is required');
+      }
+
+      if (payload.deliveryTime.hour < 0 || payload.deliveryTime.hour > 23) {
+        throw new Error('Hour must be between 0-23');
+      }
+
+      if (payload.deliveryTime.minute < 0 || payload.deliveryTime.minute > 59) {
+        throw new Error('Minute must be between 0-59');
+      }
+
+      // Validate frequency-specific fields
+      if (payload.frequency === 'weekly') {
+        if (!payload.deliveryDays || payload.deliveryDays.length === 0) {
+          throw new Error('Delivery days are required for weekly subscriptions');
+        }
+      }
+
+      if (payload.frequency === 'monthly') {
+        if (!payload.deliveryDate || payload.deliveryDate < 1 || payload.deliveryDate > 31) {
+          throw new Error('Valid delivery date (1-31) is required for monthly subscriptions');
+        }
+      }
+
+      const { data } = await apiClient.post<ApiResponse<Subscription>>(
+        '/subscriptions',
+        payload
+      );
       return { success: true, data: data.data };
     } catch (error) {
       throw new Error(formatApiError(error));
     }
   },
 
-  pauseSubscription: async (id: string, pausedUntil: string) => {
+  // Update subscription
+  updateSubscription: async (subscriptionId: string, payload: SubscriptionUpdatePayload) => {
     try {
-      const { data } = await apiClient.post<ApiResponse<Subscription>>(`/subscriptions/${id}/pause`, {
-        pausedUntil,
-      });
+      const { data } = await apiClient.put<ApiResponse<Subscription>>(
+        `/subscriptions/${subscriptionId}`,
+        payload
+      );
       return { success: true, data: data.data };
     } catch (error) {
       throw new Error(formatApiError(error));
     }
   },
 
-  resumeSubscription: async (id: string) => {
+  // Pause subscription
+  pauseSubscription: async (subscriptionId: string, payload: PauseSubscriptionPayload = {}) => {
     try {
-      const { data } = await apiClient.post<ApiResponse<Subscription>>(`/subscriptions/${id}/resume`);
+      const { data } = await apiClient.post<ApiResponse<Subscription>>(
+        `/subscriptions/${subscriptionId}/pause`,
+        payload
+      );
       return { success: true, data: data.data };
     } catch (error) {
       throw new Error(formatApiError(error));
     }
   },
 
-  cancelSubscription: async (id: string) => {
+  // Resume subscription
+  resumeSubscription: async (subscriptionId: string) => {
     try {
-      const { data } = await apiClient.post<ApiResponse<Subscription>>(`/subscriptions/${id}/cancel`);
+      const { data } = await apiClient.post<ApiResponse<Subscription>>(
+        `/subscriptions/${subscriptionId}/resume`
+      );
       return { success: true, data: data.data };
     } catch (error) {
       throw new Error(formatApiError(error));
     }
   },
 
-  updateSubscription: async (id: string, subscriptionData: Partial<Subscription>) => {
+  // Cancel subscription
+  cancelSubscription: async (subscriptionId: string, reason?: string) => {
     try {
-      const { data } = await apiClient.put<ApiResponse<Subscription>>(`/subscriptions/${id}`, subscriptionData);
+      const { data } = await apiClient.post<ApiResponse<Subscription>>(
+        `/subscriptions/${subscriptionId}/cancel`,
+        { reason }
+      );
       return { success: true, data: data.data };
     } catch (error) {
       throw new Error(formatApiError(error));
     }
   },
+
+  // Get subscription statistics
+  getStatistics: async () => {
+    try {
+      const { data } = await apiClient.get<ApiResponse<any>>(
+        '/subscriptions/statistics'
+      );
+      return { success: true, data: data.data };
+    } catch (error) {
+      throw new Error(formatApiError(error));
+    }
+  }
 };

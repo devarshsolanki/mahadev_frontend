@@ -10,25 +10,32 @@ export const apiClient = axios.create({
   timeout: 30000,
 });
 
-// Store tokens
-let accessToken: string | null = null;
-let refreshToken: string | null = null;
+// Token management using localStorage
+const ACCESS_TOKEN_KEY = 'accessToken';
+const REFRESH_TOKEN_KEY = 'refreshToken';
 
 export const setTokens = (access: string, refresh: string) => {
-  accessToken = access;
-  refreshToken = refresh;
+  localStorage.setItem(ACCESS_TOKEN_KEY, access);
+  localStorage.setItem(REFRESH_TOKEN_KEY, refresh);
 };
 
-export const getAccessToken = () => accessToken;
+export const getAccessToken = (): string | null => {
+  return localStorage.getItem(ACCESS_TOKEN_KEY);
+};
+
+export const getRefreshToken = (): string | null => {
+  return localStorage.getItem(REFRESH_TOKEN_KEY);
+};
 
 export const clearTokens = () => {
-  accessToken = null;
-  refreshToken = null;
+  localStorage.removeItem(ACCESS_TOKEN_KEY);
+  localStorage.removeItem(REFRESH_TOKEN_KEY);
 };
 
 // Request interceptor
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
+    const accessToken = getAccessToken();
     if (accessToken && config.headers) {
       config.headers.Authorization = `Bearer ${accessToken}`;
     }
@@ -59,6 +66,7 @@ apiClient.interceptors.response.use(
   (response: AxiosResponse) => response,
   async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+    const refreshToken = getRefreshToken();
 
     if (error.response?.status === 401 && !originalRequest._retry && refreshToken) {
       if (isRefreshing) {

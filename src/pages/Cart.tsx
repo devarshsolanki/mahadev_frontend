@@ -112,7 +112,11 @@ const Cart = () => {
                 <div className="w-24 h-24 bg-muted rounded-lg overflow-hidden flex-shrink-0">
                   {item.product.images?.[0] && (
                     <img
-                      src={item.product.images[0]}
+                      src={
+                        Array.isArray(item.product.images) && item.product.images.length
+                          ? (typeof item.product.images[0] === 'string' ? item.product.images[0] : (item.product.images[0] as any).url)
+                          : undefined
+                      }
                       alt={item.product.name}
                       className="w-full h-full object-cover"
                     />
@@ -123,7 +127,12 @@ const Cart = () => {
                   <h3 className="font-semibold mb-1">{item.product.name}</h3>
                   <p className="text-sm text-muted-foreground mb-2">{item.product.unit}</p>
                   <div className="flex items-center gap-2 mb-2">
-                    <span className="text-lg font-bold text-primary">₹{item.price}</span>
+                    <span className="text-lg font-bold text-primary">
+                      ₹{item.price}
+                      {item.product.unit && (
+                        <span className="text-sm text-muted-foreground ml-2">/ {item.product.unit}</span>
+                      )}
+                    </span>
                     {item.product.mrp > item.price && (
                       <span className="text-sm text-muted-foreground line-through">
                         ₹{item.product.mrp}

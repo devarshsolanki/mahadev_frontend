@@ -15,12 +15,12 @@ const Subscriptions = () => {
 
   const { data: subscriptions, isLoading } = useQuery({
     queryKey: ['subscriptions'],
-    queryFn: subscriptionsApi.getSubscriptions,
+    queryFn: () => subscriptionsApi.getSubscriptions(),
   });
 
   const pauseMutation = useMutation({
-    mutationFn: ({ id, pausedUntil }: { id: string; pausedUntil: string }) =>
-      subscriptionsApi.pauseSubscription(id, pausedUntil),
+    mutationFn: ({ id, reason }: { id: string; reason?: string }) =>
+      subscriptionsApi.pauseSubscription(id, { reason }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
       toast.success('Subscription paused');
@@ -53,9 +53,11 @@ const Subscriptions = () => {
   });
 
   const handlePause = (id: string) => {
-    const pausedUntil = new Date();
-    pausedUntil.setDate(pausedUntil.getDate() + 7);
-    pauseMutation.mutate({ id, pausedUntil: pausedUntil.toISOString() });
+    pauseMutation.mutate({ id, reason: 'User paused' });
+  };
+
+  const handleResume = (id: string) => {
+    resumeMutation.mutate(id);
   };
 
   const handleCancel = (id: string) => {
@@ -91,7 +93,7 @@ const Subscriptions = () => {
     );
   }
 
-  const subscriptionsList = subscriptions?.data || [];
+  const subscriptionsList = (subscriptions as any)?.data || [];
 
   if (subscriptionsList.length === 0) {
     return (
@@ -102,9 +104,9 @@ const Subscriptions = () => {
           <p className="text-muted-foreground mb-6">
             Subscribe to your favorite products and never run out!
           </p>
-          <Button onClick={() => navigate('/products')}>
+          <Button onClick={() => navigate('/create-subscription')}>
             <Plus className="mr-2 h-4 w-4" />
-            Browse Products
+            Create Your First Subscription
           </Button>
         </Card>
       </div>
@@ -114,8 +116,11 @@ const Subscriptions = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-        <h1 className="text-3xl font-bold">My Subscriptions</h1>
-        <Button onClick={() => navigate('/products')}>
+        <div>
+          <h1 className="text-3xl font-bold">My Subscriptions</h1>
+          <p className="text-muted-foreground mt-1">Manage your recurring deliveries</p>
+        </div>
+        <Button onClick={() => navigate('/create-subscription')}>
           <Plus className="mr-2 h-4 w-4" />
           New Subscription
         </Button>
@@ -126,13 +131,18 @@ const Subscriptions = () => {
           <Card key={subscription._id} className="p-6">
             <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-4">
               <div className="flex-1">
-                <div className="flex items-center gap-3 mb-3">
+                <div className="flex items-center gap-3 mb-3 flex-wrap">
                   <Badge className={getStatusColor(subscription.status)}>
                     {subscription.status.toUpperCase()}
                   </Badge>
                   <Badge variant="outline" className="capitalize">
                     {subscription.frequency}
                   </Badge>
+                  {subscription.paymentMethod && (
+                    <Badge variant="outline" className="capitalize">
+                      {subscription.paymentMethod}
+                    </Badge>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -140,18 +150,27 @@ const Subscriptions = () => {
                     <Calendar className="h-4 w-4 text-muted-foreground" />
                     <span className="text-muted-foreground">Next Delivery:</span>
                     <span className="font-medium">
-                      {format(new Date(subscription.nextDeliveryDate), 'MMM dd, yyyy')}
+                      {format(new Date(subscription.nextDeliveryDate), 'MMM dd, yyyy')} at{' '}
+                      {subscription.deliveryTime?.hour?.toString().padStart(2, '0')}:
+                      {subscription.deliveryTime?.minute?.toString().padStart(2, '0')}
                     </span>
                   </div>
 
                   <div className="text-sm">
                     <span className="text-muted-foreground">Items: </span>
-                    <span className="font-medium">{subscription.items.length}</span>
+                    <span className="font-medium">{subscription.items?.length || 0}</span>
                   </div>
 
                   <div className="text-lg font-bold text-primary">
-                    ₹{subscription.totalAmount} per delivery
+                    ₹{subscription.total || 0} per delivery
                   </div>
+
+                  {subscription.successfulOrders > 0 && (
+                    <div className="text-sm text-muted-foreground">
+                      <span className="font-medium">{subscription.successfulOrders}</span> successful orders • Total spent: ₹
+                      <span className="font-medium">{subscription.totalSpent || 0}</span>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -176,7 +195,7 @@ const Subscriptions = () => {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => resumeMutation.mutate(subscription._id)}
+                    onClick={() => handleResume(subscription._id)}
                     disabled={resumeMutation.isPending}
                   >
                     {resumeMutation.isPending ? (
@@ -206,19 +225,24 @@ const Subscriptions = () => {
               </div>
             </div>
 
-            <div className="border-t pt-4">
-              <h3 className="text-sm font-semibold mb-3">Items</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {subscription.items.map((item: any, index: number) => (
-                  <div key={index} className="flex items-center gap-3 text-sm">
-                    <div className="font-medium flex-1">
-                      {typeof item.product === 'string' ? 'Product' : item.product.name}
+            {/* Items List */}
+            {subscription.items && subscription.items.length > 0 && (
+              <div className="border-t pt-4">
+                <h3 className="text-sm font-semibold mb-3">Items</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {subscription.items.map((item: any, index: number) => (
+                    <div key={index} className="flex items-center gap-3 text-sm p-2 bg-muted rounded">
+                      <div className="flex-1">
+                        <p className="font-medium">
+                          {typeof item.product === 'string' ? 'Product' : item.product?.name || item.productSnapshot?.name}
+                        </p>
+                        <p className="text-xs text-muted-foreground">₹{item.price} × {item.quantity}</p>
+                      </div>
                     </div>
-                    <div className="text-muted-foreground">× {item.quantity}</div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </Card>
         ))}
       </div>

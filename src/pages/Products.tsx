@@ -22,6 +22,7 @@ const Products = () => {
   const [addingToCart, setAddingToCart] = useState<string | null>(null);
 
   const category = searchParams.get('category') || '';
+  const ALL_CATEGORY_VALUE = '__all';
   const sort = searchParams.get('sort') || 'name';
   const minPrice = searchParams.get('minPrice') || '';
   const maxPrice = searchParams.get('maxPrice') || '';
@@ -96,13 +97,13 @@ const Products = () => {
 
           <div className="flex gap-4">
             <Select
-              value={category}
+              value={category || ALL_CATEGORY_VALUE}
               onValueChange={(value) => {
                 const params = new URLSearchParams(searchParams);
-                if (value) {
-                  params.set('category', value);
-                } else {
+                if (value === ALL_CATEGORY_VALUE) {
                   params.delete('category');
+                } else {
+                  params.set('category', value);
                 }
                 setSearchParams(params);
               }}
@@ -111,7 +112,7 @@ const Products = () => {
                 <SelectValue placeholder="All Categories" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Categories</SelectItem>
+                <SelectItem value={ALL_CATEGORY_VALUE}>All Categories</SelectItem>
                 {categories?.data?.map((cat) => (
                   <SelectItem key={cat._id} value={cat._id}>
                     {cat.name}
@@ -181,7 +182,7 @@ const Products = () => {
 
       {/* Products Grid */}
       {productsLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
           {[...Array(8)].map((_, i) => (
             <Card key={i} className="overflow-hidden">
               <Skeleton className="aspect-square" />
@@ -193,13 +194,13 @@ const Products = () => {
             </Card>
           ))}
         </div>
-      ) : productsData?.data?.products?.length === 0 ? (
+      ) : !productsData?.data || productsData.data.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-lg text-muted-foreground">No products found</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {productsData?.data?.products?.map((product: Product) => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+          {productsData.data.map((product: Product) => (
             <Card
               key={product._id}
               className="overflow-hidden group cursor-pointer card-hover"
@@ -210,7 +211,11 @@ const Products = () => {
               >
                 {product.images?.[0] ? (
                   <img
-                    src={product.images[0]}
+                    src={
+                      Array.isArray(product.images) && product.images.length
+                        ? (typeof product.images[0] === 'string' ? product.images[0] : (product.images[0] as any).url)
+                        : undefined
+                    }
                     alt={product.name}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
@@ -235,15 +240,18 @@ const Products = () => {
                   <h3 className="font-semibold line-clamp-2 mb-1">{product.name}</h3>
                   <p className="text-xs text-muted-foreground">{product.unit}</p>
                 </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <span className="text-lg font-bold text-primary">₹{product.price}</span>
-                    {product.mrp > product.price && (
-                      <span className="text-sm text-muted-foreground line-through ml-2">
-                        ₹{product.mrp}
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-lg font-bold text-primary">
+                        ₹{product.price}
+                        {product.unit && (
+                          <span className="text-sm text-muted-foreground ml-2">/ {product.unit}</span>
+                        )}
                       </span>
-                    )}
-                  </div>
+                      {product.mrp > product.price && (
+                        <span className="text-sm text-muted-foreground line-through ml-2">₹{product.mrp}</span>
+                      )}
+                    </div>
                 </div>
                 <Button
                   size="sm"

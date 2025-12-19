@@ -10,6 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { ArrowLeft, ShoppingCart, Minus, Plus, Loader2 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { SubscriptionDialog } from '@/components/subscription/SubscriptionDialog';
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -17,6 +18,7 @@ const ProductDetail = () => {
   const { isAuthenticated } = useAuth();
   const [quantity, setQuantity] = useState(1);
   const [addingToCart, setAddingToCart] = useState(false);
+  const [subscriptionDialogOpen, setSubscriptionDialogOpen] = useState(false);
 
   const { data: product, isLoading } = useQuery({
     queryKey: ['product', id],
@@ -91,7 +93,11 @@ const ProductDetail = () => {
           <div className="aspect-square bg-muted rounded-lg overflow-hidden relative">
             {productData.images?.[0] ? (
               <img
-                src={productData.images[0]}
+                src={
+                  Array.isArray(productData.images) && productData.images.length
+                    ? (typeof productData.images[0] === 'string' ? productData.images[0] : (productData.images[0] as any).url)
+                    : undefined
+                }
                 alt={productData.name}
                 className="w-full h-full object-cover"
               />
@@ -115,9 +121,14 @@ const ProductDetail = () => {
             <Badge variant="secondary" className="mb-4">
               {productData.category?.name}
             </Badge>
-            
+
             <div className="flex items-baseline gap-3 mb-4">
-              <span className="text-4xl font-bold text-primary">₹{productData.price}</span>
+              <span className="text-4xl font-bold text-primary">
+                ₹{productData.price}
+                {productData.unit && (
+                  <span className="text-lg text-muted-foreground ml-3">/ {productData.unit}</span>
+                )}
+              </span>
               {productData.mrp > productData.price && (
                 <>
                   <span className="text-xl text-muted-foreground line-through">
@@ -127,8 +138,6 @@ const ProductDetail = () => {
                 </>
               )}
             </div>
-
-            <p className="text-muted-foreground">{productData.unit}</p>
           </div>
 
           <div>
@@ -193,7 +202,14 @@ const ProductDetail = () => {
                 <Button
                   size="lg"
                   variant="outline"
-                  onClick={() => navigate('/subscriptions/new', { state: { product: productData } })}
+                  onClick={() => {
+                    if (!isAuthenticated) {
+                      toast.error('Please login to subscribe');
+                      navigate('/auth');
+                      return;
+                    }
+                    setSubscriptionDialogOpen(true);
+                  }}
                 >
                   Subscribe
                 </Button>
@@ -202,6 +218,16 @@ const ProductDetail = () => {
           )}
         </div>
       </div>
+
+      {/* Subscription Dialog */}
+      {productData && (
+        <SubscriptionDialog
+          open={subscriptionDialogOpen}
+          onOpenChange={setSubscriptionDialogOpen}
+          product={productData}
+          initialQuantity={quantity}
+        />
+      )}
     </div>
   );
 };
