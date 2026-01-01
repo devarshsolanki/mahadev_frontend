@@ -179,7 +179,7 @@ const Subscriptions = () => {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handlePause(subscription._id)}
+                    onClick={() => handlePause(subscription.subscriptionId)}
                     disabled={pauseMutation.isPending}
                   >
                     {pauseMutation.isPending ? (
@@ -195,7 +195,7 @@ const Subscriptions = () => {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handleResume(subscription._id)}
+                    onClick={() => handleResume(subscription.subscriptionId)}
                     disabled={resumeMutation.isPending}
                   >
                     {resumeMutation.isPending ? (
@@ -211,7 +211,7 @@ const Subscriptions = () => {
                   <Button
                     variant="destructive"
                     size="sm"
-                    onClick={() => handleCancel(subscription._id)}
+                    onClick={() => handleCancel(subscription.subscriptionId)}
                     disabled={cancelMutation.isPending}
                   >
                     {cancelMutation.isPending ? (

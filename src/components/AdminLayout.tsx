@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
-import { Home, Package, ShoppingCart, Settings, Loader2 } from 'lucide-react';
+import { Home, Package, ShoppingCart, Settings, Loader2, Calendar } from 'lucide-react';
 import { AdminErrorBoundary } from './AdminErrorBoundary';
 
 const AdminLayout = () => {
@@ -16,6 +16,7 @@ const AdminLayout = () => {
     { href: '/admin', icon: Home, label: 'Dashboard' },
     { href: '/admin/products', icon: Package, label: 'Products' },
     { href: '/admin/orders', icon: ShoppingCart, label: 'Orders' },
+    { href: '/admin/subscriptions/active', icon: Calendar, label: 'Active Subscriptions' },
     { href: '/admin/settings', icon: Settings, label: 'Settings' },
   ];
 
@@ -33,11 +34,10 @@ const AdminLayout = () => {
               <Link
                 key={href}
                 to={href}
-                className={`flex items-center gap-3 px-3 py-2 text-sm rounded-md transition-colors ${
-                  isActive(href)
+                className={`flex items-center gap-3 px-3 py-2 text-sm rounded-md transition-colors ${isActive(href)
                     ? 'bg-primary text-primary-foreground'
                     : 'hover:bg-muted'
-                }`}
+                  }`}
               >
                 <Icon className="h-4 w-4" />
                 {label}
@@ -56,11 +56,10 @@ const AdminLayout = () => {
               <Link
                 key={href}
                 to={href}
-                className={`p-2 rounded-md transition-colors ${
-                  isActive(href)
+                className={`p-2 rounded-md transition-colors ${isActive(href)
                     ? 'bg-primary text-primary-foreground'
                     : 'hover:bg-muted'
-                }`}
+                  }`}
               >
                 <Icon className="h-4 w-4" />
                 <span className="sr-only">{label}</span>

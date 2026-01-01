@@ -56,14 +56,13 @@ const CategorySlider = ({ category }: { category: CategoryType }) => {
   return (
     <div className="mt-10 relative">
       {/* Category Title */}
-      <h3 className="text-xl font-semibold text-gray-900 mb-5 px-1">{category.name}</h3>
+      <h3 className="text-2xl font-semibold text-gray-900 mb-3 px-1">{category.name}</h3>
 
       {/* Scrollable Container with hidden scrollbar */}
       <div
         ref={containerRef}
-        className={`flex gap-4 overflow-x-auto scroll-smooth pb-2 px-1 snap-x snap-mandatory transition-all ${
-          isGrabbing ? 'cursor-grabbing' : 'cursor-grab'
-        }`}
+        className={`flex gap-4 overflow-x-auto scroll-smooth pb-2 px-1 snap-x snap-mandatory transition-all ${isGrabbing ? 'cursor-grabbing' : 'cursor-grab'
+          }`}
         style={{
           WebkitOverflowScrolling: 'touch',
           scrollbarWidth: 'none',
@@ -128,10 +127,10 @@ const CategorySlider = ({ category }: { category: CategoryType }) => {
                   <button
                     className="text-sm mt-2 px-3 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
                     onClick={(e) => e.stopPropagation()}
-                    >
+                  >
                     Add
                   </button>
-                    </div>
+                </div>
               </div>
             </div>
           ))
@@ -147,10 +146,11 @@ const Home = () => {
 
   // Add your slider images here
   const sliderImages = [
-    'https://www.shopurgrocery.com/wordpress/wp-content/uploads/2019/11/Launch-your-Online-Grocery-Store-Special-Script-Features-and-Upgrades.png',
-    'https://www.shutterstock.com/image-illustration/shopping-basket-full-grocery-products-260nw-2461166563.jpg',
-    'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT7IpSQleRU5FXHN2E-fEl_xY8ajXIhDs_TfA&s',
-    'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSdy_Hp83rcWNuFXCMQeGDckJk6W9yuAnv5j4RPg5LlJLsCqJH09HUkMmfLQDnzlTbbuQ8&usqp=CAU',
+    'https://www.shutterstock.com/image-photo/hand-holding-trolley-icon-full-260nw-2228613733.jpg',
+    'https://demo.themagnifico.net/grocery-supermarket/wp-content/themes/grocery-supermarket-pro/assets/images/slides/slide1.png',
+    'https://food-ubc.b-cdn.net/wp-content/uploads/2020/02/Save-Money-On-Groceries_UBC-Food-Services.jpg',
+    'https://starindojapan.com/wp-content/uploads/2018/08/slider2.jpg',
+    'https://i0.wp.com/mostafa-supermarket.com/wp-content/uploads/2018/08/slider1.jpg?w=960&ssl=1',
 
   ];
 
@@ -220,9 +220,9 @@ const Home = () => {
             <img
               src={image}
               alt={`Slide ${index + 1}`}
-              className="w-full h-full object-cover"
+              className="w-full h-full "
             />
-            <div className="absolute inset-0 bg-black/50" />
+            <div className="absolute inset-0 bg-black/10" />
           </div>
         ))}
 
@@ -230,7 +230,7 @@ const Home = () => {
         <div className="relative z-10 h-full flex items-center justify-center text-white text-center">
           <div className="container mx-auto px-4">
             <div className="max-w-3xl mx-auto animate-fade-in">
-              <h1 className="text-5xl md:text-6xl font-bold mb-6 text-green-200">
+              <h1 className="text-5xl md:text-6xl font-bold mb-6 text-green-50">
                 Fresh Groceries
                 <br />
                 Delivered Fast
@@ -267,35 +267,40 @@ const Home = () => {
       {/* Categories */}
       <section className="py-8">
         <div className="container mx-auto px-4">
-          {/* <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Shop by Category</h2>
-            <p className="text-muted-foreground">Explore our wide range of fresh products</p>
-          </div> */}
-
           <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-7 gap-6">
             {categories?.data?.slice(0, 8).map((category) => (
               <Card
                 key={category._id}
-                className="p-3 cursor-pointer card-hover text-center"
                 onClick={() => navigate(`/products?category=${category._id}`)}
+                className="relative h-36 cursor-pointer overflow-hidden rounded-xl card-hover"
+                style={{
+                  backgroundImage: `url(${category.image
+                      ? typeof category.image === "string"
+                        ? category.image
+                        : (category.image as any).url
+                      : "/placeholder.svg"
+                    })`,
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
+                }}
               >
-                <img
-                  src={
-                    category.image
-                      ? (typeof category.image === 'string' ? category.image : (category.image as any).url)
-                      : '/placeholder.svg'
-                  }
-                  alt={category.name}
-                  className="w-16 h-16 mx-auto mb-4 rounded-full object-cover"
-                />
-                <h3 className="font-semibold">{category.name}</h3>
+                {/* Blur layer */}
+                <div className="absolute inset-0  bg-black/40" />
+
+                {/* Content */}
+                <div className="relative z-10 flex h-full items-center justify-center">
+                  <h3 className="text-white font-semibold text-sm text-center px-2">
+                    {category.name}
+                  </h3>
+                </div>
               </Card>
+
             ))}
           </div>
 
           <div className="text-center mt-8">
-            <Button variant="outline" onClick={() => navigate('/categories')}>
-              View All Categories
+            <Button size="lg" onClick={() => navigate('/categories')} className='bg-green-500'>
+              View All Products
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </div>
@@ -303,21 +308,21 @@ const Home = () => {
       </section>
 
       {/* Featured Products */}
-      <section className="py-10 bg-muted/30">
+      <section className="py-8 bg-muted/50">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Featured Products</h2>
-            <p className="text-muted-foreground">Hand-picked products just for you</p>
+          <div className="text-center mb-6">
+            <h2 className="text-3xl font-bold mb-2">Most Ordered Products</h2>
+            <p className="text-muted-foreground">Products our customers order the most</p>
           </div>
 
           {productsLoading ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+            <div className="grid grid-cols-3 md:grid-cols-3 lg:grid-cols-5 gap-6">
               {[...Array(4)].map((_, i) => (
                 <Card key={i} className="p-6 h-80 animate-pulse bg-muted" />
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+            <div className="grid grid-cols-3 md:grid-cols-3 lg:grid-cols-7 gap-2">
               {featuredProducts?.data?.slice(0, 8).map((product: Product) => (
                 <Card
                   key={product._id}
@@ -352,9 +357,9 @@ const Home = () => {
                             <span className="text-sm text-muted-foreground line-through ml-2">₹{product.mrp}</span>
                           )}
                         </span>
-                          {product.unit && (
-                            <span className="text-sm text-muted-foreground ml-2"> {product.unit}</span>
-                          )}
+                        {product.unit && (
+                          <span className="text-sm text-muted-foreground ml-2"> {product.unit}</span>
+                        )}
                       </div>
                       <Button size="sm" className="btn-primary">
                         Add
@@ -367,7 +372,7 @@ const Home = () => {
           )}
 
           <div className="text-center mt-8">
-            <Button size="lg" onClick={() => navigate('/products')}>
+            <Button size="lg" onClick={() => navigate('/products')} className='bg-green-500'>
               View All Products
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
@@ -376,12 +381,12 @@ const Home = () => {
       </section>
 
       {/* Category sliders per category (below featured products) */}
-      <section className="py-10">
+      <section className="py-5">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-8">
+          {/* <div className="text-center mb-8">
             <h2 className="text-2xl font-bold mb-2">Shop by Category</h2>
             <p className="text-muted-foreground">Explore products grouped by categories</p>
-          </div>
+          </div> */}
 
           {homeSliders?.data && homeSliders.data.length > 0 ? (
             homeSliders.data.map((s: any) => (
@@ -396,7 +401,7 @@ const Home = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 gradient-warm text-white">
+      <section className="py-10 rounded-3xl mx-5  gradient-warm text-white">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-4xl font-bold mb-6">Subscribe & Save More</h2>
           <p className="text-xl mb-8 text-white/90 max-w-2xl mx-auto">

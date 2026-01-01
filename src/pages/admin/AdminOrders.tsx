@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { Loader2, Search } from 'lucide-react';
+import { Loader2, Search, Eye } from 'lucide-react';
 import { useState } from 'react';
 import { adminApi, OrderUpdatePayload } from '@/api/admin';
 import { Input } from '@/components/ui/input';
@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import OrderDetailsDialog from '@/components/admin/OrderDetailsDialog';
 
 const OrderStatusBadge = ({ status }: { status: string }) => {
   const getStatusColor = (status: string) => {
@@ -48,6 +49,8 @@ const AdminOrders = () => {
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('all');
   const [page, setPage] = useState(1);
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const limit = 10;
 
   const { data: orders, isLoading } = useQuery({
@@ -85,6 +88,11 @@ const AdminOrders = () => {
     });
   };
 
+  const handleViewDetails = (order: any) => {
+    setSelectedOrder(order);
+    setIsDetailsOpen(true);
+  };
+
   if (isLoading) {
     return (
       <div className="flex h-[50vh] items-center justify-center">
@@ -97,14 +105,14 @@ const AdminOrders = () => {
   const totalPages = Math.ceil((orders?.total || 0) / limit);
 
   return (
-    <div className="container mx-auto p-6">
+    <div className="container mx-auto p-4 md:p-6">
       <div className="mb-8">
         <h1 className="text-3xl font-bold">Orders Management</h1>
         <p className="text-muted-foreground">Manage and track all orders</p>
       </div>
 
       <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div className="flex flex-1 gap-4">
+        <div className="flex flex-1 flex-col gap-4 md:flex-row">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -115,7 +123,7 @@ const AdminOrders = () => {
             />
           </div>
           <Select value={status} onValueChange={setStatus}>
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-full md:w-[180px]">
               <SelectValue placeholder="Filter by status" />
             </SelectTrigger>
             <SelectContent>
@@ -130,12 +138,14 @@ const AdminOrders = () => {
         </div>
       </div>
 
-      <div className="rounded-lg border">
+      <div className="rounded-lg border bg-card shadow-sm">
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full min-w-[1000px]">
             <thead>
               <tr className="border-b bg-muted/50">
-                <th className="px-4 py-3 text-left text-sm font-medium">Order ID</th>
+                <th className="px-4 py-3 text-left text-sm font-medium">Product Image</th>
+                <th className="px-4 py-3 text-left text-sm font-medium">Product Name</th>
+                <th className="px-4 py-3 text-left text-sm font-medium">Quantity</th>
                 <th className="px-4 py-3 text-left text-sm font-medium">Customer</th>
                 <th className="px-4 py-3 text-left text-sm font-medium">Total</th>
                 <th className="px-4 py-3 text-left text-sm font-medium">Status</th>
@@ -145,40 +155,85 @@ const AdminOrders = () => {
             </thead>
             <tbody>
               {ordersData.map((order: any) => (
-                <tr key={order._id} className="border-b">
-                  <td className="px-4 py-3 text-sm">
-                    <Link
-                      to={`/admin/orders/${order._id}`}
-                      className="text-primary hover:underline"
-                    >
-                      {order._id}
-                    </Link>
+                <tr key={order._id} className="border-b hover:bg-muted/50 transition-colors">
+                  <td className="px-4 py-3 text-sm align-top">
+                    <div className="flex flex-col gap-2">
+                      {order.items?.map((item: any, index: number) => (
+                        <div key={index} className="h-12 w-12 flex-shrink-0 rounded border bg-muted overflow-hidden">
+                          <img
+                            src={item.product?.images?.[0] || '/placeholder.png'}
+                            alt={item.product?.name}
+                            className="h-full w-full object-cover"
+                          />
+                        </div>
+                      ))}
+                    </div>
                   </td>
-                  <td className="px-4 py-3 text-sm">{order.user.name}</td>
-                  <td className="px-4 py-3 text-sm">₹{order.total}</td>
-                  <td className="px-4 py-3 text-sm">
-                    <OrderStatusBadge status={order.status} />
+                  <td className="px-4 py-3 text-sm align-top">
+                    <div className="flex flex-col gap-2">
+                      {order.items?.map((item: any, index: number) => (
+                        <div key={index} className="flex h-12 items-center">
+                          <span className="line-clamp-2 max-w-[200px]" title={item.product?.name}>
+                            {item.product?.name || 'Product Unavailable'}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
                   </td>
-                  <td className="px-4 py-3 text-sm">
-                    {new Date(order.createdAt).toLocaleDateString()}
+                  <td className="px-4 py-3 text-sm align-top">
+                    <div className="flex flex-col gap-2">
+                      {order.items?.map((item: any, index: number) => (
+                        <div key={index} className="flex h-12 items-center">
+                          {item.quantity}
+                        </div>
+                      ))}
+                    </div>
                   </td>
-                  <td className="px-4 py-3 text-sm">
-                    <Select
-                      value={order.status}
-                      onValueChange={(value) => handleStatusChange(order._id, value)}
-                      disabled={order.status === 'delivered' || order.status === 'cancelled'}
-                    >
-                      <SelectTrigger className="w-[130px]">
-                        <SelectValue placeholder="Update status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="pending">Pending</SelectItem>
-                        <SelectItem value="confirmed">Confirmed</SelectItem>
-                        <SelectItem value="shipped">Shipped</SelectItem>
-                        <SelectItem value="delivered">Delivered</SelectItem>
-                        <SelectItem value="cancelled">Cancelled</SelectItem>
-                      </SelectContent>
-                    </Select>
+                  <td className="px-4 py-3 text-sm align-top">
+                    <div className="mt-2 font-medium">{order.user?.name || 'Unknown User'}</div>
+                    <div className="text-xs text-muted-foreground">{order.user?.phone}</div>
+                  </td>
+                  <td className="px-4 py-3 text-sm align-top">
+                    <div className="mt-2 font-medium">₹{order.total}</div>
+                  </td>
+                  <td className="px-4 py-3 text-sm align-top">
+                    <div className="mt-2">
+                      <OrderStatusBadge status={order.status} />
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-sm align-top">
+                    <div className="mt-2 whitespace-nowrap">
+                      {new Date(order.createdAt).toLocaleDateString()}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-sm align-top">
+                    <div className="mt-1 flex flex-col gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full justify-start"
+                        onClick={() => handleViewDetails(order)}
+                      >
+                        <Eye className="mr-2 h-4 w-4" />
+                        View Details
+                      </Button>
+                      <Select
+                        value={order.status}
+                        onValueChange={(value) => handleStatusChange(order._id, value)}
+                        disabled={order.status === 'delivered' || order.status === 'cancelled'}
+                      >
+                        <SelectTrigger className="h-8 w-[140px]">
+                          <SelectValue placeholder="Update" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="pending">Pending</SelectItem>
+                          <SelectItem value="confirmed">Confirmed</SelectItem>
+                          <SelectItem value="shipped">Shipped</SelectItem>
+                          <SelectItem value="delivered">Delivered</SelectItem>
+                          <SelectItem value="cancelled">Cancelled</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -208,6 +263,12 @@ const AdminOrders = () => {
           </Button>
         </div>
       )}
+
+      <OrderDetailsDialog
+        order={selectedOrder}
+        open={isDetailsOpen}
+        onOpenChange={setIsDetailsOpen}
+      />
     </div>
   );
 };

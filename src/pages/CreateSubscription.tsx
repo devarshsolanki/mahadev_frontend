@@ -151,9 +151,9 @@ const CreateSubscription = () => {
 
   return (
     <div className="min-h-screen bg-background py-8">
-      <div className="container max-w-4xl mx-auto px-4">
+      <div className="container max-w-7xl mx-auto px-4">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-6">
           <button
             onClick={() => navigate('/subscriptions')}
             className="flex items-center gap-2 text-muted-foreground hover:text-foreground mb-4"
@@ -165,192 +165,270 @@ const CreateSubscription = () => {
           <p className="text-muted-foreground mt-2">Set up automatic deliveries for your favorite products</p>
         </div>
 
-        {/* Progress Steps */}
-        <div className="flex gap-4 mb-8">
-          {['products', 'schedule', 'address'].map((s, idx) => (
-            <div key={s} className="flex-1">
-              <div
-                className={`h-2 rounded-full ${
-                  step === s
-                    ? 'bg-primary'
-                    : ['products', 'schedule'].includes(s) && step === 'address'
-                    ? 'bg-primary'
-                    : 'bg-muted'
-                }`}
-              />
-              <p className="text-sm font-medium mt-2 capitalize">{s}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* Step 1: Products Selection */}
-        {step === 'products' && (
-          <div className="space-y-6">
+        {/* Split Layout: Products on Left, Details on Right */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* LEFT COLUMN: Products */}
+          <div className="lg:col-span-2 space-y-6">
             {/* Search Products */}
-            <Card className="p-6">
-              <label className="block text-sm font-medium mb-2">Search Products</label>
+            <Card className="p-4 shadow-md">
+              <label className="block text-sm font-semibold mb-3">🔍 Search Products</label>
               <Input
-                placeholder="Search products..."
+                placeholder="Type to search products..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                className="text-base"
               />
             </Card>
 
             {/* Products Grid */}
-            <Card className="p-6">
-              <h2 className="text-lg font-semibold mb-4">Available Products</h2>
+            <Card className="p-4 shadow-md">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-bold">Available Products</h2>
+                {products.length > 0 && (
+                  <Badge variant="secondary" className="text-sm">
+                    {products.length} product{products.length !== 1 ? 's' : ''}
+                  </Badge>
+                )}
+              </div>
 
               {productsLoading ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Loader2 className="h-6 w-6 animate-spin mx-auto" />
+                <div className="text-center py-16">
+                  <Loader2 className="h-10 w-10 animate-spin mx-auto text-primary" />
+                  <p className="text-muted-foreground mt-4">Loading products...</p>
                 </div>
               ) : products.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  No products found
+                <div className="text-center py-16">
+                  <div className="text-5xl mb-4">📦</div>
+                  <p className="text-lg text-muted-foreground">No products found</p>
+                  <p className="text-sm text-muted-foreground mt-2">Try adjusting your search</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {products.map((product) => (
-                    <div key={product._id} className="border rounded-lg p-4">
-                      <div className="aspect-square mb-3 bg-muted rounded overflow-hidden">
-                        {product.image && (
-                          <img
-                            src={product.image}
-                            alt={product.name}
-                            className="w-full h-full object-cover"
-                          />
-                        )}
-                      </div>
-                      <h3 className="font-medium text-sm mb-2 line-clamp-2">{product.name}</h3>
-                      <div className="flex items-center justify-between mb-3">
-                        <span className="text-lg font-bold text-primary">₹{product.price}</span>
-                        {product.stock > 0 ? (
-                          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                            In Stock
-                          </Badge>
-                        ) : (
-                          <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
-                            Out
-                          </Badge>
-                        )}
-                      </div>
-                      <Button
-                        onClick={() => addItem(product._id)}
-                        size="sm"
-                        className="w-full"
-                        disabled={product.stock === 0}
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                  {products.map((product) => {
+                    const isAdded = items.some(item => item.productId === product._id);
+                    return (
+                      <div
+                        key={product._id}
+                        className={`group relative border-2 rounded-xl p-3 transition-all duration-300 hover:shadow-lg ${isAdded
+                          ? 'border-primary bg-primary/5 shadow-md'
+                          : 'border-gray-200 hover:border-primary/50 bg-white'
+                          }`}
                       >
-                        <Plus className="h-4 w-4 mr-2" />
-                        Add
-                      </Button>
-                    </div>
-                  ))}
+                        {/* Product Image */}
+                        <div className="relative aspect-square mb-3 bg-gray-100 rounded-lg overflow-hidden">
+                          {product.images && product.images.length > 0 ? (
+                            <img
+                              src={
+                                typeof product.images[0] === 'string'
+                                  ? product.images[0]
+                                  : (product.images[0] as any).url
+                              }
+                              alt={product.name}
+                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-5xl">
+                              📦
+                            </div>
+                          )}
+
+                          {/* Stock Badge */}
+                          <div className="absolute top-2 right-2">
+                            {product.stock > 0 ? (
+                              <Badge className="bg-green-500 text-white border-0 shadow-lg text-xs">
+                                In Stock
+                              </Badge>
+                            ) : (
+                              <Badge className="bg-red-500 text-white border-0 shadow-lg text-xs">
+                                Out
+                              </Badge>
+                            )}
+                          </div>
+
+                          {/* Added Indicator */}
+                          {isAdded && (
+                            <div className="absolute top-2 left-2">
+                              <Badge className="bg-primary text-white border-0 shadow-lg text-xs">
+                                ✓ Added
+                              </Badge>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Product Info */}
+                        <div className="space-y-2">
+                          <h3 className="font-semibold text-sm leading-tight line-clamp-2 min-h-[2.5rem]">
+                            {product.name}
+                          </h3>
+
+                          <div className="flex items-baseline gap-2">
+                            <span className="text-xl font-bold text-primary">
+                              ₹{product.price}
+                            </span>
+                            {product.mrp && product.mrp > product.price && (
+                              <span className="text-xs text-muted-foreground line-through">
+                                ₹{product.mrp}
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Add Button */}
+                          <Button
+                            onClick={() => addItem(product._id)}
+                            disabled={product.stock === 0 || isAdded}
+                            className="w-full mt-3"
+                            size="sm"
+                          >
+                            {isAdded ? (
+                              <>✓ Added</>
+                            ) : (
+                              <>
+                                <Plus className="h-4 w-4 mr-1" />
+                                Add
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </Card>
+          </div>
 
-            {/* Selected Items */}
-            {items.length > 0 && (
-              <Card className="p-6 bg-primary/5 border-primary/20">
-                <h2 className="text-lg font-semibold mb-4">Selected Items ({items.length})</h2>
-                <div className="space-y-3">
-                  {items.map((item) => (
-                    <div key={item.productId} className="flex items-center justify-between gap-3 p-3 bg-white rounded border">
-                      <div>
-                        <p className="font-medium">{item.product?.name || 'Product'}</p>
-                        <p className="text-sm text-muted-foreground">₹{item.product?.price || 0}</p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => updateQuantity(item.productId, item.quantity - 1)}
+          {/* RIGHT COLUMN: Details Panel */}
+          <div className="lg:col-span-1">
+            <div className="sticky top-4 space-y-4">
+              {/* Selected Items */}
+              <Card className="p-4 shadow-lg border-primary/20">
+                <h2 className="text-lg font-bold mb-3 flex items-center gap-2">
+                  🛒 Cart
+                  {items.length > 0 && (
+                    <Badge className="bg-primary text-white">{items.length}</Badge>
+                  )}
+                </h2>
+
+                {items.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <div className="text-4xl mb-2">🛒</div>
+                    <p className="text-sm">No items added yet</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="space-y-2 max-h-64 overflow-y-auto pr-1 mb-4">
+                      {items.map((item) => (
+                        <div
+                          key={item.productId}
+                          className="flex items-start gap-2 p-2 bg-muted/50 rounded-lg"
                         >
-                          −
-                        </Button>
-                        <span className="w-8 text-center font-medium">{item.quantity}</span>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => updateQuantity(item.productId, item.quantity + 1)}
-                        >
-                          +
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeItem(item.productId)}
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
+                          {/* Product Image Thumbnail */}
+                          {item.product?.images && item.product.images.length > 0 && (
+                            <div className="w-12 h-12 flex-shrink-0 bg-gray-100 rounded overflow-hidden">
+                              <img
+                                src={
+                                  typeof item.product.images[0] === 'string'
+                                    ? item.product.images[0]
+                                    : (item.product.images[0] as any).url
+                                }
+                                alt={item.product.name}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          )}
+
+                          {/* Product Details */}
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm truncate">
+                              {item.product?.name || 'Product'}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              ₹{item.product?.price || 0} × {item.quantity}
+                            </p>
+
+                            {/* Quantity Controls */}
+                            <div className="flex items-center gap-1 mt-1">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => updateQuantity(item.productId, item.quantity - 1)}
+                                className="h-6 w-6 p-0"
+                              >
+                                −
+                              </Button>
+                              <span className="w-8 text-center font-medium text-xs">
+                                {item.quantity}
+                              </span>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => updateQuantity(item.productId, item.quantity + 1)}
+                                className="h-6 w-6 p-0"
+                              >
+                                +
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => removeItem(item.productId)}
+                                className="h-6 w-6 p-0 ml-auto hover:text-red-600"
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="border-t pt-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium">Total per delivery:</span>
+                        <span className="text-xl font-bold text-primary">
+                          ₹{items.reduce((sum, item) => sum + (item.product?.price || 0) * item.quantity, 0)}
+                        </span>
                       </div>
                     </div>
-                  ))}
-                </div>
+                  </>
+                )}
               </Card>
-            )}
 
-            {/* Action Buttons */}
-            <div className="flex gap-3">
-              <Button
-                variant="outline"
-                onClick={() => navigate('/subscriptions')}
-                className="flex-1"
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={() => setStep('schedule')}
-                disabled={items.length === 0}
-                className="flex-1"
-              >
-                Next: Schedule
-              </Button>
-            </div>
-          </div>
-        )}
+              {/* Schedule Configuration */}
+              <Card className="p-4 shadow-lg">
+                <h2 className="text-lg font-bold mb-3">📅 Schedule</h2>
 
-        {/* Step 2: Schedule Configuration */}
-        {step === 'schedule' && (
-          <div className="space-y-6">
-            <Card className="p-6">
-              <h2 className="text-lg font-semibold mb-6">Delivery Schedule</h2>
-
-              {/* Frequency */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium mb-3">Frequency</label>
-                <div className="grid grid-cols-3 gap-3">
-                  {(['daily', 'weekly', 'monthly'] as const).map((freq) => (
-                    <button
-                      key={freq}
-                      onClick={() => {
-                        setFrequency(freq);
-                        if (freq === 'weekly' && deliveryDays.length === 0) {
-                          setDeliveryDays([1, 3, 5]);
-                        }
-                      }}
-                      className={`p-3 rounded border font-medium capitalize transition-colors ${
-                        frequency === freq
-                          ? 'bg-primary text-primary-foreground border-primary'
-                          : 'bg-background border-muted hover:border-muted-foreground'
-                      }`}
-                    >
-                      {freq}
-                    </button>
-                  ))}
+                {/* Frequency */}
+                <div className="mb-4">
+                  <label className="block text-xs font-medium mb-2">Frequency</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {(['daily', 'weekly', 'monthly'] as const).map((freq) => (
+                      <button
+                        key={freq}
+                        onClick={() => {
+                          setFrequency(freq);
+                          if (freq === 'weekly' && deliveryDays.length === 0) {
+                            setDeliveryDays([1, 3, 5]);
+                          }
+                        }}
+                        className={`p-2 rounded text-xs font-medium capitalize transition-colors ${frequency === freq
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-muted hover:bg-muted-foreground/20'
+                          }`}
+                      >
+                        {freq}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
 
-              {/* Delivery Time */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium mb-3">Preferred Delivery Time</label>
-                <div className="flex gap-3">
-                  <div className="flex-1">
-                    <label className="text-xs text-muted-foreground mb-1 block">Hour</label>
+                {/* Delivery Time */}
+                <div className="mb-4">
+                  <label className="block text-xs font-medium mb-2">Delivery Time</label>
+                  <div className="flex gap-2">
                     <select
                       value={deliveryTime.hour}
                       onChange={(e) => setDeliveryTime({ ...deliveryTime, hour: parseInt(e.target.value) })}
-                      className="w-full p-2 border rounded"
+                      className="flex-1 p-2 border rounded text-sm"
                     >
                       {Array.from({ length: 24 }).map((_, i) => (
                         <option key={i} value={i}>
@@ -358,13 +436,10 @@ const CreateSubscription = () => {
                         </option>
                       ))}
                     </select>
-                  </div>
-                  <div className="flex-1">
-                    <label className="text-xs text-muted-foreground mb-1 block">Minute</label>
                     <select
                       value={deliveryTime.minute}
                       onChange={(e) => setDeliveryTime({ ...deliveryTime, minute: parseInt(e.target.value) })}
-                      className="w-full p-2 border rounded"
+                      className="flex-1 p-2 border rounded text-sm"
                     >
                       {[0, 15, 30, 45].map((min) => (
                         <option key={min} value={min}>
@@ -374,183 +449,138 @@ const CreateSubscription = () => {
                     </select>
                   </div>
                 </div>
-              </div>
 
-              {/* Weekly Days Selection */}
-              {frequency === 'weekly' && (
-                <div className="mb-6">
-                  <label className="block text-sm font-medium mb-3">Delivery Days</label>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    {DAYS_OF_WEEK.map((day) => (
-                      <button
-                        key={day.value}
-                        onClick={() => toggleDeliveryDay(day.value)}
-                        className={`p-2 rounded font-medium text-sm transition-colors ${
-                          deliveryDays.includes(day.value)
+                {/* Weekly Days Selection */}
+                {frequency === 'weekly' && (
+                  <div className="mb-4">
+                    <label className="block text-xs font-medium mb-2">Delivery Days</label>
+                    <div className="grid grid-cols-4 gap-1">
+                      {DAYS_OF_WEEK.map((day) => (
+                        <button
+                          key={day.value}
+                          onClick={() => toggleDeliveryDay(day.value)}
+                          className={`p-1 rounded text-xs font-medium transition-colors ${deliveryDays.includes(day.value)
                             ? 'bg-primary text-primary-foreground'
                             : 'bg-muted hover:bg-muted-foreground/20'
-                        }`}
+                            }`}
+                        >
+                          {day.label.slice(0, 3)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Monthly Date Selection */}
+                {frequency === 'monthly' && (
+                  <div className="mb-4">
+                    <label className="block text-xs font-medium mb-2">Delivery Date</label>
+                    <select
+                      value={deliveryDate}
+                      onChange={(e) => setDeliveryDate(parseInt(e.target.value))}
+                      className="w-full p-2 border rounded text-sm"
+                    >
+                      {Array.from({ length: 31 }).map((_, i) => (
+                        <option key={i + 1} value={i + 1}>
+                          {(i + 1).toString().padStart(2, '0')} of month
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {/* Customer Notes */}
+                <div>
+                  <label className="block text-xs font-medium mb-2">Notes (Optional)</label>
+                  <textarea
+                    value={customerNotes}
+                    onChange={(e) => setCustomerNotes(e.target.value)}
+                    placeholder="Special instructions..."
+                    className="w-full p-2 border rounded resize-none text-sm"
+                    rows={2}
+                  />
+                </div>
+              </Card>
+
+              {/* Address Selection */}
+              <Card className="p-4 shadow-lg">
+                <h2 className="text-lg font-bold mb-3">📍 Delivery Address</h2>
+
+                {addresses.length === 0 ? (
+                  <div className="text-center py-4">
+                    <p className="text-sm text-muted-foreground mb-3">No addresses found</p>
+                    <Button size="sm" onClick={() => navigate('/profile')}>
+                      Add Address
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {addresses.map((address) => (
+                      <label
+                        key={address._id}
+                        className={`p-3 border-2 rounded-lg cursor-pointer transition-colors block ${selectedAddressId === address._id
+                          ? 'bg-primary/10 border-primary'
+                          : 'border-muted hover:bg-muted/50'
+                          }`}
                       >
-                        {day.label.slice(0, 3)}
-                      </button>
+                        <div className="flex items-start gap-2">
+                          <input
+                            type="radio"
+                            name="address"
+                            value={address._id}
+                            checked={selectedAddressId === address._id}
+                            onChange={(e) => setSelectedAddressId(e.target.value)}
+                            className="mt-1"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm capitalize">{address.label}</p>
+                            <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                              {address.addressLine1}
+                              {address.addressLine2 && `, ${address.addressLine2}`}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {address.city}, {address.pincode}
+                            </p>
+                            {address.isDefault && (
+                              <Badge className="mt-1 bg-green-100 text-green-800 text-xs">Default</Badge>
+                            )}
+                          </div>
+                        </div>
+                      </label>
                     ))}
                   </div>
-                </div>
-              )}
+                )}
+              </Card>
 
-              {/* Monthly Date Selection */}
-              {frequency === 'monthly' && (
-                <div className="mb-6">
-                  <label className="block text-sm font-medium mb-3">Delivery Date</label>
-                  <select
-                    value={deliveryDate}
-                    onChange={(e) => setDeliveryDate(parseInt(e.target.value))}
-                    className="w-full p-2 border rounded"
-                  >
-                    {Array.from({ length: 31 }).map((_, i) => (
-                      <option key={i + 1} value={i + 1}>
-                        {(i + 1).toString().padStart(2, '0')} of every month
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              {/* Customer Notes */}
-              <div>
-                <label className="block text-sm font-medium mb-2">Customer Notes (Optional)</label>
-                <textarea
-                  value={customerNotes}
-                  onChange={(e) => setCustomerNotes(e.target.value)}
-                  placeholder="Add any special instructions..."
-                  className="w-full p-2 border rounded resize-none"
-                  rows={3}
-                />
-              </div>
-            </Card>
-
-            {/* Action Buttons */}
-            <div className="flex gap-3">
-              <Button
-                variant="outline"
-                onClick={() => setStep('products')}
-                className="flex-1"
-              >
-                Back
-              </Button>
-              <Button
-                onClick={() => setStep('address')}
-                className="flex-1"
-              >
-                Next: Address
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {/* Step 3: Address Selection */}
-        {step === 'address' && (
-          <div className="space-y-6">
-            <Card className="p-6">
-              <h2 className="text-lg font-semibold mb-6">Select Delivery Address</h2>
-
-              {addresses.length === 0 ? (
-                <div className="text-center py-8">
-                  <p className="text-muted-foreground mb-4">No addresses found</p>
-                  <Button onClick={() => navigate('/profile')}>
-                    Add Address
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {addresses.map((address) => (
-                    <label
-                      key={address._id}
-                      className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                        selectedAddressId === address._id
-                          ? 'bg-primary/5 border-primary'
-                          : 'hover:bg-muted/50'
-                      }`}
-                    >
-                      <div className="flex items-start gap-3">
-                        <input
-                          type="radio"
-                          name="address"
-                          value={address._id}
-                          checked={selectedAddressId === address._id}
-                          onChange={(e) => setSelectedAddressId(e.target.value)}
-                          className="mt-1"
-                        />
-                        <div className="flex-1">
-                          <p className="font-medium capitalize">{address.label}</p>
-                          <p className="text-sm text-muted-foreground mt-1">{address.fullAddress}</p>
-                          {address.landmark && (
-                            <p className="text-sm text-muted-foreground">Near: {address.landmark}</p>
-                          )}
-                          <p className="text-sm text-muted-foreground">
-                            {address.city}, {address.state} - {address.pincode}
-                          </p>
-                          {address.isDefault && (
-                            <Badge className="mt-2 bg-green-100 text-green-800">Default</Badge>
-                          )}
-                        </div>
-                      </div>
-                    </label>
-                  ))}
-                </div>
-              )}
-            </Card>
-
-            {/* Order Summary */}
-            <Card className="p-6 bg-primary/5 border-primary/20">
-              <h2 className="text-lg font-semibold mb-4">Summary</h2>
-              <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span>Items:</span>
-                  <span className="font-medium">{items.length}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Frequency:</span>
-                  <span className="font-medium capitalize">{frequency}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Time:</span>
-                  <span className="font-medium">
-                    {deliveryTime.hour.toString().padStart(2, '0')}:
-                    {deliveryTime.minute.toString().padStart(2, '0')}
-                  </span>
-                </div>
-              </div>
-            </Card>
-
-            {/* Action Buttons */}
-            <div className="flex gap-3">
-              <Button
-                variant="outline"
-                onClick={() => setStep('schedule')}
-                className="flex-1"
-              >
-                Back
-              </Button>
+              {/* Create Button */}
               <Button
                 onClick={handleCreateSubscription}
-                disabled={!selectedAddressId || createMutation.isPending}
-                className="flex-1"
+                disabled={items.length === 0 || !selectedAddressId || createMutation.isPending}
+                className="w-full h-12 text-base font-bold"
+                size="lg"
               >
                 {createMutation.isPending ? (
                   <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    <Loader2 className="h-5 w-5 mr-2 animate-spin" />
                     Creating...
                   </>
                 ) : (
                   'Create Subscription'
                 )}
               </Button>
+
+              <Button
+                variant="outline"
+                onClick={() => navigate('/subscriptions')}
+                className="w-full"
+              >
+                Cancel
+              </Button>
             </div>
           </div>
-        )}
-      </div>
-    </div>
+        </div>
+      </div >
+    </div >
   );
 };
 

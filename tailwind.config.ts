@@ -51,7 +51,9 @@ export default {
         },
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        sans: ['Poppins', 'sans-serif'],
+        heading: ['Poppins', 'sans-serif'],
+        body: ['Merriweather', 'serif'],
       },
       boxShadow: {
         'glow': 'var(--shadow-glow)',

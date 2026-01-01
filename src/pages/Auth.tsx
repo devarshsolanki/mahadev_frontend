@@ -8,6 +8,7 @@ import { useAuth } from '@/context/AuthContext';
 import { authApi } from '@/api/auth';
 import { toast } from 'sonner';
 import { Loader2, ArrowLeft } from 'lucide-react';
+import toE164 from '@/utils/phone';
 
 const Auth = () => {
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
@@ -23,10 +24,9 @@ const Auth = () => {
 
   const handleSendOTP = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    const fullPhone = `+91${phone}`;
+    const fullPhone = toE164(phone, '91');
     if (!/^\+?[1-9]\d{9,14}$/.test(fullPhone)) {
-      toast.error('Please enter a valid 10-digit phone number');
+      toast.error('Please enter a valid phone number');
       return;
     }
 
@@ -52,7 +52,7 @@ const Auth = () => {
 
     setIsLoading(true);
     try {
-      const fullPhone = `+91${phone}`;
+      const fullPhone = toE164(phone, '91');
       const data = await login(fullPhone, otp, authMode === 'signup' ? name : undefined);
       if (data.isNewUser) {
         if (authMode === 'login') {
@@ -81,7 +81,7 @@ const Auth = () => {
   const handleResendOTP = async () => {
     setIsLoading(true);
     try {
-      const fullPhone = `+91${phone}`;
+      const fullPhone = toE164(phone, '91');
       await authApi.resendOTP(fullPhone);
       toast.success('OTP resent successfully!');
     } catch (error: any) {

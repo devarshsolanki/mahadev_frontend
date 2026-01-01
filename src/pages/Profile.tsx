@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { authApi } from '@/api/auth';
+import { walletApi } from '@/api/wallet';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,9 +10,10 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { User, Mail, Phone, MapPin, Plus, Edit, Trash2, Loader2 } from 'lucide-react';
+import { User, Mail, Phone, MapPin, Plus, Edit, Trash2, Loader2, Wallet as WalletIcon, ArrowRight } from 'lucide-react';
 
 const Profile = () => {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isAddingAddress, setIsAddingAddress] = useState(false);
@@ -29,6 +32,12 @@ const Profile = () => {
   const { data: user, isLoading } = useQuery({
     queryKey: ['profile'],
     queryFn: authApi.getProfile,
+  });
+
+  // Fetch wallet data
+  const { data: walletData } = useQuery({
+    queryKey: ['wallet'],
+    queryFn: walletApi.getWallet,
   });
 
   const updateProfileMutation = useMutation({
@@ -341,6 +350,30 @@ const Profile = () => {
 
         {/* Quick Stats */}
         <div className="space-y-6">
+          {/* Wallet Card */}
+          <Card className="p-6 gradient-hero text-white cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/wallet')}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold flex items-center gap-2">
+                <WalletIcon className="h-5 w-5" />
+                My Wallet
+              </h3>
+              <ArrowRight className="h-5 w-5" />
+            </div>
+            <div className="space-y-2">
+              <p className="text-white/80 text-sm">Available Balance</p>
+              <p className="text-3xl font-bold">₹{walletData?.data?.balance?.toFixed(2) || '0.00'}</p>
+              {walletData?.data?.isPinSet ? (
+                <Badge variant="outline" className="bg-white/10 border-white/20 text-white">
+                  PIN Secured
+                </Badge>
+              ) : (
+                <Badge variant="outline" className="bg-orange-500/20 border-orange-300/20 text-white">
+                  Set PIN
+                </Badge>
+              )}
+            </div>
+          </Card>
+
           <Card className="p-6">
             <h3 className="font-semibold mb-4">Account Stats</h3>
             <div className="space-y-3 text-sm">

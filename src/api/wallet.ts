@@ -25,7 +25,7 @@ export const walletApi = {
 
   getTransactions: async (params?: { page?: number; limit?: number; type?: string }) => {
     try {
-      const { data } = await apiClient.get<ApiResponse<{ transactions: Transaction[]; pagination: any }>>(
+      const { data } = await apiClient.get<ApiResponse<Transaction[]>>(
         '/wallet/transactions',
         { params }
       );
@@ -44,9 +44,13 @@ export const walletApi = {
     }
   },
 
-  setPIN: async (pin: string) => {
+  setPIN: async (pin: string, oldPin?: string) => {
     try {
-      const { data } = await apiClient.post<ApiResponse<any>>('/wallet/set-pin', { pin });
+      const payload: { pin: string; oldPin?: string } = { pin };
+      if (oldPin) {
+        payload.oldPin = oldPin;
+      }
+      const { data } = await apiClient.post<ApiResponse<any>>('/wallet/set-pin', payload);
       return { success: true, data: data.data };
     } catch (error) {
       throw new Error(formatApiError(error));

@@ -127,24 +127,35 @@ export interface OrderItem {
 
 // Wallet Types
 export interface Wallet {
-  _id: string;
-  user: string;
+  _id?: string;
+  user?: string;
   balance: number;
+  holdBalance?: number;
+  availableBalance?: number;
   currency: string;
   isActive: boolean;
-  hasPIN: boolean;
+  isPinSet: boolean;
+  totalCredited?: number;
+  totalDebited?: number;
+  lastTransactionAt?: string;
 }
 
 export interface Transaction {
   _id: string;
+  transactionId: string;
+  user: string;
   wallet: string;
   type: 'credit' | 'debit' | 'refund';
   amount: number;
   balanceBefore: number;
   balanceAfter: number;
   description: string;
+  category?: string;
+  order?: string;
+  status: 'pending' | 'completed' | 'failed' | 'reversed';
   metadata?: any;
   createdAt: string;
+  updatedAt?: string;
 }
 
 // Subscription Types

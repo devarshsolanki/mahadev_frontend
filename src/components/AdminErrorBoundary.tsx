@@ -21,9 +21,11 @@ export class AdminErrorBoundary extends React.Component<Props, State> {
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    // Log error to your error reporting service
-    console.error('Admin Error:', error, errorInfo);
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
+    // Send to error tracking service in production
+    if (process.env.NODE_ENV === 'production') {
+      // Sentry.captureException(error, { contexts: { react: errorInfo } });
+    }
   }
 
   handleRetry = () => {

@@ -59,7 +59,8 @@ export const Navbar = () => {
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
-            <div className="h-8 w-8 rounded-lg gradient-hero" />
+            {/* <div className="h-8 w-8 rounded-lg gradient-hero" /> */}
+            <img src="./public/favicon.ico" alt="Mahadev Shop" className="h-12 w-15 hidden sm:block rounded-lg" />
             <span className="text-xl font-bold">Mahadev Shop</span>
           </Link>
 

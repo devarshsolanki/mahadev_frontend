@@ -71,11 +71,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const logout = async () => {
+  const logout = async (): Promise<void> => {
     try {
       await authApi.logout();
-    } catch (error) {
-      console.error('Logout error:', error);
     } finally {
       clearTokens();
       setUser(null);

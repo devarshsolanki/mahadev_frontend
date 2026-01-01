@@ -118,7 +118,7 @@ export const adminApi = {
 
   updateProduct: async (id: string, payload: ProductUpdatePayload) => {
     let requestPayload: any;
-    
+
     if (payload instanceof FormData) {
       requestPayload = payload;
     } else {
@@ -126,7 +126,7 @@ export const adminApi = {
     }
 
     const response = await apiClient.put(`/products/${id}`, requestPayload, {
-      headers: payload instanceof FormData 
+      headers: payload instanceof FormData
         ? { 'Content-Type': 'multipart/form-data' }
         : undefined,
     });
@@ -195,6 +195,12 @@ export const adminApi = {
   // Category order counts (number of orders that include products from a category)
   getCategoryOrderCounts: async () => {
     const response = await apiClient.get('/admin/stats/category-order-counts');
+    return response.data;
+  },
+
+  // Active Subscriptions
+  getActiveSubscriptions: async () => {
+    const response = await apiClient.get('/admin/subscriptions/active');
     return response.data;
   },
 };
