@@ -4,7 +4,7 @@ import { ApiResponse, Wallet, Transaction } from './types';
 export const walletApi = {
   getWallet: async () => {
     try {
-      const { data } = await apiClient.get<ApiResponse<Wallet>>('/wallet');
+      const { data } = await apiClient.get<ApiResponse<Wallet>>('/api/v1/wallet');
       return { success: true, data: data.data };
     } catch (error) {
       throw new Error(formatApiError(error));
@@ -13,7 +13,7 @@ export const walletApi = {
 
   addMoney: async (amount: number, paymentMethod: string) => {
     try {
-      const { data } = await apiClient.post<ApiResponse<any>>('/wallet/add-money', {
+      const { data } = await apiClient.post<ApiResponse<any>>('/api/v1/wallet/add-money', {
         amount,
         paymentMethod,
       });
@@ -26,7 +26,7 @@ export const walletApi = {
   getTransactions: async (params?: { page?: number; limit?: number; type?: string }) => {
     try {
       const { data } = await apiClient.get<ApiResponse<Transaction[]>>(
-        '/wallet/transactions',
+        '/api/v1/wallet/transactions',
         { params }
       );
       return { success: true, data: data.data };
@@ -37,7 +37,7 @@ export const walletApi = {
 
   getTransactionById: async (id: string) => {
     try {
-      const { data } = await apiClient.get<ApiResponse<Transaction>>(`/wallet/transactions/${id}`);
+      const { data } = await apiClient.get<ApiResponse<Transaction>>(`/api/v1/wallet/transactions/${id}`);
       return { success: true, data: data.data };
     } catch (error) {
       throw new Error(formatApiError(error));
@@ -50,7 +50,7 @@ export const walletApi = {
       if (oldPin) {
         payload.oldPin = oldPin;
       }
-      const { data } = await apiClient.post<ApiResponse<any>>('/wallet/set-pin', payload);
+      const { data } = await apiClient.post<ApiResponse<any>>('/api/v1/wallet/set-pin', payload);
       return { success: true, data: data.data };
     } catch (error) {
       throw new Error(formatApiError(error));
@@ -59,7 +59,7 @@ export const walletApi = {
 
   verifyPIN: async (pin: string) => {
     try {
-      const { data } = await apiClient.post<ApiResponse<any>>('/wallet/verify-pin', { pin });
+      const { data } = await apiClient.post<ApiResponse<any>>('/api/v1/wallet/verify-pin', { pin });
       return { success: true, data: data.data };
     } catch (error) {
       throw new Error(formatApiError(error));
@@ -68,7 +68,7 @@ export const walletApi = {
 
   getStatistics: async () => {
     try {
-      const { data } = await apiClient.get<ApiResponse<any>>('/wallet/statistics');
+      const { data } = await apiClient.get<ApiResponse<any>>('/api/v1/wallet/statistics');
       return { success: true, data: data.data };
     } catch (error) {
       throw new Error(formatApiError(error));

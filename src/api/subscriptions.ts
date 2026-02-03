@@ -43,7 +43,7 @@ export const subscriptionsApi = {
       if (status) params.append('status', status);
 
       const { data } = await apiClient.get<ApiResponse<Subscription[]>>(
-        `/subscriptions${params.toString() ? '?' + params.toString() : ''}`
+        `/api/v1/subscriptions${params.toString() ? '?' + params.toString() : ''}`
       );
       return { success: true, data: data.data };
     } catch (error) {
@@ -55,7 +55,7 @@ export const subscriptionsApi = {
   getSubscriptionById: async (subscriptionId: string) => {
     try {
       const { data } = await apiClient.get<ApiResponse<Subscription>>(
-        `/subscriptions/${subscriptionId}`
+        `/api/v1/subscriptions/${subscriptionId}`
       );
       return { success: true, data: data.data };
     } catch (error) {
@@ -105,7 +105,7 @@ export const subscriptionsApi = {
       }
 
       const { data } = await apiClient.post<ApiResponse<Subscription>>(
-        '/subscriptions',
+        '/api/v1/subscriptions',
         payload
       );
       return { success: true, data: data.data };
@@ -118,7 +118,7 @@ export const subscriptionsApi = {
   updateSubscription: async (subscriptionId: string, payload: SubscriptionUpdatePayload) => {
     try {
       const { data } = await apiClient.put<ApiResponse<Subscription>>(
-        `/subscriptions/${subscriptionId}`,
+        `/api/v1/subscriptions/${subscriptionId}`,
         payload
       );
       return { success: true, data: data.data };
@@ -131,7 +131,7 @@ export const subscriptionsApi = {
   pauseSubscription: async (subscriptionId: string, payload: PauseSubscriptionPayload = {}) => {
     try {
       const { data } = await apiClient.post<ApiResponse<Subscription>>(
-        `/subscriptions/${subscriptionId}/pause`,
+        `/api/v1/subscriptions/${subscriptionId}/pause`,
         payload
       );
       return { success: true, data: data.data };
@@ -144,7 +144,7 @@ export const subscriptionsApi = {
   resumeSubscription: async (subscriptionId: string) => {
     try {
       const { data } = await apiClient.post<ApiResponse<Subscription>>(
-        `/subscriptions/${subscriptionId}/resume`
+        `/api/v1/subscriptions/${subscriptionId}/resume`
       );
       return { success: true, data: data.data };
     } catch (error) {
@@ -156,7 +156,7 @@ export const subscriptionsApi = {
   cancelSubscription: async (subscriptionId: string, reason?: string) => {
     try {
       const { data } = await apiClient.post<ApiResponse<Subscription>>(
-        `/subscriptions/${subscriptionId}/cancel`,
+        `/api/v1/subscriptions/${subscriptionId}/cancel`,
         { reason }
       );
       return { success: true, data: data.data };
@@ -169,7 +169,7 @@ export const subscriptionsApi = {
   getStatistics: async () => {
     try {
       const { data } = await apiClient.get<ApiResponse<any>>(
-        '/subscriptions/statistics'
+        '/api/v1/subscriptions/statistics'
       );
       return { success: true, data: data.data };
     } catch (error) {

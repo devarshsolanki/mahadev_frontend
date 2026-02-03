@@ -13,7 +13,7 @@ export const productsApi = {
     limit?: number;
   }) => {
     try {
-      const { data } = await apiClient.get<ApiResponse<Product[]>>('/products', {
+      const { data } = await apiClient.get<ApiResponse<Product[]>>('/api/v1/products', {
         params,
       });
       return { success: true, data: data.data };
@@ -24,7 +24,7 @@ export const productsApi = {
 
   getProductById: async (id: string) => {
     try {
-      const { data} = await apiClient.get<ApiResponse<Product>>(`/products/${id}`);
+      const { data} = await apiClient.get<ApiResponse<Product>>(`/api/v1/products/${id}`);
       return { success: true, data: data.data };
     } catch (error) {
       throw new Error(formatApiError(error));
@@ -33,7 +33,7 @@ export const productsApi = {
 
   getFeaturedProducts: async () => {
     try {
-      const { data } = await apiClient.get<ApiResponse<Product[]>>('/products/featured');
+      const { data } = await apiClient.get<ApiResponse<Product[]>>('/api/v1/products/featured');
       return { success: true, data: data.data };
     } catch (error) {
       throw new Error(formatApiError(error));
@@ -42,7 +42,7 @@ export const productsApi = {
 
   searchProducts: async (query: string) => {
     try {
-      const { data } = await apiClient.get<ApiResponse<Product[]>>(`/products/search?q=${query}`);
+      const { data } = await apiClient.get<ApiResponse<Product[]>>(`/api/v1/products/search?q=${query}`);
       return { success: true, data: data.data };
     } catch (error) {
       throw new Error(formatApiError(error));
@@ -51,7 +51,7 @@ export const productsApi = {
 
   createProduct: async (formData: FormData) => {
     try {
-      const { data } = await apiClient.post<ApiResponse<Product>>('/products', formData, {
+      const { data } = await apiClient.post<ApiResponse<Product>>('/api/v1/products', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -64,7 +64,7 @@ export const productsApi = {
 
   updateProduct: async (id: string, formData: FormData) => {
     try {
-      const { data } = await apiClient.put<ApiResponse<Product>>(`/products/${id}`, formData, {
+      const { data } = await apiClient.put<ApiResponse<Product>>(`/api/v1/products/${id}`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -79,7 +79,7 @@ export const productsApi = {
 export const categoriesApi = {
   getCategories: async () => {
     try {
-      const { data } = await apiClient.get<ApiResponse<Category[]>>('/categories');
+      const { data } = await apiClient.get<ApiResponse<Category[]>>('/api/v1/categories');
       return { success: true, data: data.data };
     } catch (error) {
       throw new Error(formatApiError(error));
@@ -88,7 +88,7 @@ export const categoriesApi = {
 
   getCategoryTree: async () => {
     try {
-      const { data } = await apiClient.get<ApiResponse<Category[]>>('/categories/tree');
+      const { data } = await apiClient.get<ApiResponse<Category[]>>('/api/v1/categories/tree');
       return { success: true, data: data.data };
     } catch (error) {
       throw new Error(formatApiError(error));
@@ -97,7 +97,7 @@ export const categoriesApi = {
 
   getCategoryById: async (id: string) => {
     try {
-      const { data } = await apiClient.get<ApiResponse<Category>>(`/categories/${id}`);
+      const { data } = await apiClient.get<ApiResponse<Category>>(`/api/v1/categories/${id}`);
       return { success: true, data: data.data };
     } catch (error) {
       throw new Error(formatApiError(error));
@@ -106,7 +106,7 @@ export const categoriesApi = {
   // Admin: create a new category
   createCategory: async (categoryData: Partial<Category>) => {
     try {
-      const { data } = await apiClient.post<ApiResponse<Category>>('/categories', categoryData);
+      const { data } = await apiClient.post<ApiResponse<Category>>('/api/v1/categories', categoryData);
       return { success: true, data: data.data };
     } catch (error) {
       throw new Error(formatApiError(error));
@@ -116,7 +116,7 @@ export const categoriesApi = {
   // Admin: update a category
   updateCategory: async (id: string, categoryData: Partial<Category>) => {
     try {
-      const { data } = await apiClient.put<ApiResponse<Category>>(`/categories/${id}`, categoryData);
+      const { data } = await apiClient.put<ApiResponse<Category>>(`/api/v1/categories/${id}`, categoryData);
       return { success: true, data: data.data };
     } catch (error) {
       throw new Error(formatApiError(error));
@@ -126,7 +126,7 @@ export const categoriesApi = {
   // Admin: delete a category
   deleteCategory: async (id: string) => {
     try {
-      const { data } = await apiClient.delete<ApiResponse<null>>(`/categories/${id}`);
+      const { data } = await apiClient.delete<ApiResponse<null>>(`/api/v1/categories/${id}`);
       return { success: true, data: data.data };
     } catch (error) {
       throw new Error(formatApiError(error));

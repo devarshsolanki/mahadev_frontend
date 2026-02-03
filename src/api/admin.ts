@@ -68,7 +68,7 @@ export interface HomeSliderConfig {
 export const adminApi = {
   // Dashboard
   getDashboardStats: async () => {
-    const response = await apiClient.get<ApiResponse<AdminStats>>('/admin/dashboard');
+    const response = await apiClient.get<ApiResponse<AdminStats>>('/api/v1/admin/dashboard');
     return response.data;
   },
 
@@ -83,34 +83,34 @@ export const adminApi = {
     sortBy?: string;
     sortOrder?: 'asc' | 'desc';
   }) => {
-    const response = await apiClient.get('/orders/admin/all', { params });
+    const response = await apiClient.get('/api/v1/orders/admin/all', { params });
     return response.data;
   },
 
   updateOrder: async (orderId: string, payload: OrderUpdatePayload) => {
-    const response = await apiClient.put(`/orders/admin/${orderId}/status`, payload);
+    const response = await apiClient.put(`/api/v1/orders/admin/${orderId}/status`, payload);
     return response.data;
   },
 
   // Categories
   createCategory: async (payload: CategoryCreatePayload) => {
-    const response = await apiClient.post('/categories', payload);
+    const response = await apiClient.post('/api/v1/categories', payload);
     return response.data;
   },
 
   updateCategory: async (id: string, payload: Partial<CategoryCreatePayload>) => {
-    const response = await apiClient.put(`/categories/${id}`, payload);
+    const response = await apiClient.put(`/api/v1/categories/${id}`, payload);
     return response.data;
   },
 
   deleteCategory: async (id: string) => {
-    const response = await apiClient.delete(`/categories/${id}`);
+    const response = await apiClient.delete(`/api/v1/categories/${id}`);
     return response.data;
   },
 
   // Products
   createProduct: async (formData: FormData) => {
-    const response = await apiClient.post('/products', formData, {
+    const response = await apiClient.post('/api/v1/products', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
     return response.data;
@@ -125,7 +125,7 @@ export const adminApi = {
       requestPayload = payload;
     }
 
-    const response = await apiClient.put(`/products/${id}`, requestPayload, {
+    const response = await apiClient.put(`/api/v1/products/${id}`, requestPayload, {
       headers: payload instanceof FormData
         ? { 'Content-Type': 'multipart/form-data' }
         : undefined,
@@ -134,18 +134,18 @@ export const adminApi = {
   },
 
   deleteProduct: async (id: string) => {
-    const response = await apiClient.delete(`/products/${id}`);
+    const response = await apiClient.delete(`/api/v1/products/${id}`);
     return response.data;
   },
 
   // Bulk operations
   bulkUpdateProducts: async (updates: Array<{ id: string } & ProductUpdatePayload>) => {
-    const response = await apiClient.patch('/products/bulk', { updates });
+    const response = await apiClient.patch('/api/v1/products/bulk', { updates });
     return response.data;
   },
 
   bulkDeleteProducts: async (ids: string[]) => {
-    const response = await apiClient.post('/products/bulk-delete', { ids });
+    const response = await apiClient.post('/api/v1/products/bulk-delete', { ids });
     return response.data;
   },
 
@@ -155,7 +155,7 @@ export const adminApi = {
     endDate?: string;
     groupBy?: 'day' | 'week' | 'month';
   }) => {
-    const response = await apiClient.get('/admin/analytics/orders', { params });
+    const response = await apiClient.get('/api/v1/admin/analytics/orders', { params });
     return response.data;
   },
 
@@ -164,7 +164,7 @@ export const adminApi = {
     endDate?: string;
     categoryId?: string;
   }) => {
-    const response = await apiClient.get('/admin/analytics/products', { params });
+    const response = await apiClient.get('/api/v1/admin/analytics/products', { params });
     return response.data;
   },
 
@@ -174,7 +174,7 @@ export const adminApi = {
     status?: string;
     format?: 'csv' | 'excel';
   }) => {
-    const response = await apiClient.get('/admin/exports/orders', {
+    const response = await apiClient.get('/api/v1/admin/exports/orders', {
       params,
       responseType: 'blob',
     });
@@ -183,24 +183,24 @@ export const adminApi = {
 
   // Home Slider Settings
   getHomeSliderSettings: async () => {
-    const response = await apiClient.get('/admin/home-sliders');
+    const response = await apiClient.get('/api/v1/admin/home-sliders');
     return response.data;
   },
 
   updateHomeSliderSettings: async (sliders: Array<{ categoryId: string; order: number }>) => {
-    const response = await apiClient.post('/admin/home-sliders', { sliders });
+    const response = await apiClient.post('/api/v1/admin/home-sliders', { sliders });
     return response.data;
   },
 
   // Category order counts (number of orders that include products from a category)
   getCategoryOrderCounts: async () => {
-    const response = await apiClient.get('/admin/stats/category-order-counts');
+    const response = await apiClient.get('/api/v1/admin/stats/category-order-counts');
     return response.data;
   },
 
   // Active Subscriptions
   getActiveSubscriptions: async () => {
-    const response = await apiClient.get('/admin/subscriptions/active');
+    const response = await apiClient.get('/api/v1/admin/subscriptions/active');
     return response.data;
   },
 };

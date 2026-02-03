@@ -4,7 +4,7 @@ import { ApiResponse, Order, DeliverySlot } from './types';
 export const ordersApi = {
   getMyOrders: async () => {
     try {
-      const { data } = await apiClient.get<ApiResponse<Order[]>>('/orders/my-orders');
+      const { data } = await apiClient.get<ApiResponse<Order[]>>('/api/v1/orders/my-orders');
       return { success: true, data: data.data };
     } catch (error) {
       throw new Error(formatApiError(error));
@@ -13,7 +13,7 @@ export const ordersApi = {
 
   getOrderById: async (orderId: string) => {
     try {
-      const { data } = await apiClient.get<ApiResponse<Order>>(`/orders/${orderId}`);
+      const { data } = await apiClient.get<ApiResponse<Order>>(`/api/v1/orders/${orderId}`);
       return { success: true, data: data.data };
     } catch (error) {
       throw new Error(formatApiError(error));
@@ -22,7 +22,7 @@ export const ordersApi = {
 
   trackOrder: async (orderId: string) => {
     try {
-      const { data } = await apiClient.get<ApiResponse<any>>(`/orders/${orderId}/track`);
+      const { data } = await apiClient.get<ApiResponse<any>>(`/api/v1/orders/${orderId}/track`);
       return { success: true, data: data.data };
     } catch (error) {
       throw new Error(formatApiError(error));
@@ -31,7 +31,7 @@ export const ordersApi = {
 
   cancelOrder: async (orderId: string, reason?: string) => {
     try {
-      const { data } = await apiClient.post<ApiResponse<Order>>(`/orders/${orderId}/cancel`, { reason });
+      const { data } = await apiClient.post<ApiResponse<Order>>(`/api/v1/orders/${orderId}/cancel`, { reason });
       return { success: true, data: data.data };
     } catch (error) {
       throw new Error(formatApiError(error));
@@ -47,7 +47,7 @@ export const checkoutApi = {
     walletPIN?: string;
   }) => {
     try {
-      const { data } = await apiClient.post<ApiResponse<Order>>('/checkout/create-order', orderData);
+      const { data } = await apiClient.post<ApiResponse<Order>>('/api/v1/checkout/create-order', orderData);
       return { success: true, data: data.data };
     } catch (error) {
       throw new Error(formatApiError(error));
@@ -56,7 +56,7 @@ export const checkoutApi = {
 
   getDeliverySlots: async () => {
     try {
-      const { data } = await apiClient.get<ApiResponse<DeliverySlot[]>>('/checkout/delivery-slots');
+      const { data } = await apiClient.get<ApiResponse<DeliverySlot[]>>('/api/v1/checkout/delivery-slots');
       return { success: true, data: data.data };
     } catch (error) {
       throw new Error(formatApiError(error));
@@ -65,7 +65,7 @@ export const checkoutApi = {
 
   verifyPayment: async (paymentData: any) => {
     try {
-      const { data } = await apiClient.post<ApiResponse<any>>('/checkout/verify-payment', paymentData);
+      const { data } = await apiClient.post<ApiResponse<any>>('/api/v1/checkout/verify-payment', paymentData);
       return { success: true, data: data.data };
     } catch (error) {
       throw new Error(formatApiError(error));
@@ -74,7 +74,7 @@ export const checkoutApi = {
 
   getDeliveryFee: async () => {
     try {
-      const { data } = await apiClient.get<ApiResponse<{ fee: number }>>('/checkout/delivery-fee');
+      const { data } = await apiClient.get<ApiResponse<{ fee: number }>>('/api/v1/checkout/delivery-fee');
       return { success: true, data: data.data };
     } catch (error) {
       throw new Error(formatApiError(error));

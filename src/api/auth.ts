@@ -21,7 +21,7 @@ async function handleRequest<T>(
 
 export const authApi = {
   sendOTP: async (phone: string) => {
-    return handleRequest(apiClient.post('/auth/send-otp', { phone }));
+    return handleRequest(apiClient.post('/api/v1/auth/send-otp', { phone }));
   },
 
   verifyOTP: async (phone: string, otp: string, name?: string) => {
@@ -29,7 +29,7 @@ export const authApi = {
     // Use a payloadSelector that returns the full response object so callers
     // (like AuthContext.login) receive accessToken/refreshToken/isNewUser/user.
     return handleRequest<AuthResponse>(
-      apiClient.post('/auth/verify-otp', {
+      apiClient.post('/api/v1/auth/verify-otp', {
         phone,
         otp,
         name,
@@ -40,13 +40,13 @@ export const authApi = {
   },
 
   resendOTP: async (phone: string) => {
-    return handleRequest(apiClient.post('/auth/resend-otp', { phone }));
+    return handleRequest(apiClient.post('/api/v1/auth/resend-otp', { phone }));
   },
 
-  getProfile: async () => handleRequest<User>(apiClient.get('/auth/profile')),
+  getProfile: async () => handleRequest<User>(apiClient.get('/api/v1/auth/profile')),
 
   updateProfile: async (profileData: Partial<User>) =>
-    handleRequest<User>(apiClient.put('/auth/profile', profileData)),
+    handleRequest<User>(apiClient.put('/api/v1/auth/profile', profileData)),
 
-  logout: async () => handleRequest(apiClient.post('/auth/logout')),
+  logout: async () => handleRequest(apiClient.post('/api/v1/auth/logout')),
 };

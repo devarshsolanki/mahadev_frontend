@@ -4,7 +4,7 @@ import { ApiResponse, Cart } from './types';
 export const cartApi = {
   getCart: async () => {
     try {
-      const { data } = await apiClient.get<ApiResponse<Cart>>('/cart');
+      const { data } = await apiClient.get<ApiResponse<Cart>>('/api/v1/cart');
       return { success: true, data: data.data };
     } catch (error) {
       throw new Error(formatApiError(error));
@@ -13,7 +13,7 @@ export const cartApi = {
 
   addToCart: async (productId: string, quantity: number) => {
     try {
-      const { data } = await apiClient.post<ApiResponse<Cart>>('/cart/add', {
+      const { data } = await apiClient.post<ApiResponse<Cart>>('/api/v1/cart/add', {
         productId,
         quantity,
       });
@@ -25,7 +25,7 @@ export const cartApi = {
 
   updateCartItem: async (itemId: string, quantity: number) => {
     try {
-      const { data } = await apiClient.put<ApiResponse<Cart>>(`/cart/items/${itemId}`, {
+      const { data } = await apiClient.put<ApiResponse<Cart>>(`/api/v1/cart/items/${itemId}`, {
         quantity,
       });
       return { success: true, data: data.data };
@@ -36,7 +36,7 @@ export const cartApi = {
 
   removeCartItem: async (itemId: string) => {
     try {
-      const { data } = await apiClient.delete<ApiResponse<Cart>>(`/cart/items/${itemId}`);
+      const { data } = await apiClient.delete<ApiResponse<Cart>>(`/api/v1/cart/items/${itemId}`);
       return { success: true, data: data.data };
     } catch (error) {
       throw new Error(formatApiError(error));
@@ -45,7 +45,7 @@ export const cartApi = {
 
   clearCart: async () => {
     try {
-      const { data } = await apiClient.delete<ApiResponse<any>>('/cart/clear');
+      const { data } = await apiClient.delete<ApiResponse<any>>('/api/v1/cart/clear');
       return { success: true, data: data.data };
     } catch (error) {
       throw new Error(formatApiError(error));
@@ -54,7 +54,7 @@ export const cartApi = {
 
   applyCoupon: async (couponCode: string) => {
     try {
-      const { data } = await apiClient.post<ApiResponse<Cart>>('/cart/coupon/apply', {
+      const { data } = await apiClient.post<ApiResponse<Cart>>('/api/v1/cart/coupon/apply', {
         couponCode,
       });
       return { success: true, data: data.data };
@@ -65,7 +65,7 @@ export const cartApi = {
 
   removeCoupon: async () => {
     try {
-      const { data } = await apiClient.delete<ApiResponse<Cart>>('/cart/coupon/remove');
+      const { data } = await apiClient.delete<ApiResponse<Cart>>('/api/v1/cart/coupon/remove');
       return { success: true, data: data.data };
     } catch (error) {
       throw new Error(formatApiError(error));
@@ -74,7 +74,7 @@ export const cartApi = {
 
   validateCart: async () => {
     try {
-      const { data } = await apiClient.get<ApiResponse<any>>('/cart/validate');
+      const { data } = await apiClient.get<ApiResponse<any>>('/api/v1/cart/validate');
       return { success: true, data: data.data };
     } catch (error) {
       throw new Error(formatApiError(error));
