@@ -209,7 +209,7 @@ const Home = () => {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="relative h-[300px] md:h-[400px] overflow-hidden">
+      <section className="relative h-[280px] sm:h-[280px] md:h-[400px] overflow-hidden">
         {/* Background Slider */}
         {sliderImages.map((image, index) => (
           <div
@@ -230,28 +230,28 @@ const Home = () => {
         <div className="relative z-10 h-full flex items-center justify-center text-white text-center">
           <div className="container mx-auto px-4">
             <div className="max-w-3xl mx-auto animate-fade-in">
-              <h1 className="text-5xl md:text-6xl font-bold mb-6 text-green-50">
+              <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold mb-4 sm:mb-6 text-green-50">
                 Fresh Groceries
                 <br />
                 Delivered Fast
               </h1>
-              <p className="text-xl mb-8 text-white/90">
+              <p className="text-sm sm:text-lg md:text-xl mb-6 sm:mb-8 text-white/90">
                 Shop for high-quality groceries from the comfort of your home. Fast delivery, great prices, and fresh products.
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <div className="flex flex-row gap-3 sm:gap-4 justify-center px-4">
                 <Button
-                  size="lg"
+                  size="sm"
                   variant="secondary"
-                  className="text-lg px-8 bg-green-600 hover:bg-green-700"
+                  className="text-sm sm:text-lg sm:px-8 sm:py-6 bg-green-600 hover:bg-green-700 w-full sm:w-auto"
                   onClick={() => navigate('/products')}
                 >
                   Shop Now
-                  <ArrowRight className="ml-2 h-5 w-5" />
+                  <ArrowRight className="ml-2 h-4 sm:h-5 w-4 sm:w-5" />
                 </Button>
                 <Button
-                  size="lg"
+                  size="sm"
                   variant="outline"
-                  className="text-lg px-8 bg-white/10 border-white text-white hover:bg-white hover:text-primary"
+                  className="text-sm sm:text-lg sm:px-8 sm:py-6 bg-white/10 border-white text-white hover:bg-white hover:text-primary w-full sm:w-auto"
                   onClick={() => navigate('/subscriptions')}
                 >
                   Subscribe & Save
@@ -267,7 +267,7 @@ const Home = () => {
       {/* Categories */}
       <section className="py-8">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-7 gap-6">
+          <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-7 gap-3">
             {categories?.data?.slice(0, 8).map((category) => (
               <Card
                 key={category._id}
@@ -316,13 +316,13 @@ const Home = () => {
           </div>
 
           {productsLoading ? (
-            <div className="grid grid-cols-3 md:grid-cols-3 lg:grid-cols-5 gap-6">
+            <div className="grid grid-cols-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 lg:gap-6">
               {[...Array(4)].map((_, i) => (
                 <Card key={i} className="p-6 h-80 animate-pulse bg-muted" />
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-3 md:grid-cols-3 lg:grid-cols-7 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-3 sm:gap-4">
               {featuredProducts?.data?.slice(0, 8).map((product: Product) => (
                 <Card
                   key={product._id}

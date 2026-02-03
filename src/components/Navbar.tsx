@@ -59,16 +59,15 @@ export const Navbar = () => {
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
-            {/* <div className="h-8 w-8 rounded-lg gradient-hero" /> */}
-            <img src="./favicon.ico" alt="Mahadev Shop" className="h-12 w-15 hidden sm:block rounded-lg" />
-            <span className="text-xl font-bold">Mahadev Shop</span>
+            <img src="./favicon.ico" alt="Mahadev Shop" className="h-12 w-15  sm:block rounded-lg" />
+            <span className="md:text-xl   font-bold">Mahadev Shop</span>
           </Link>
 
           {/* Desktop Nav Links */}
           <NavLinks />
 
           {/* Right Section */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center md:space-x-4">
             <Button variant="ghost" size="icon" onClick={() => navigate('/products?search=')}>
               <Search className="h-5 w-5" />
             </Button>
@@ -136,6 +135,7 @@ export const Navbar = () => {
             {/* Mobile Menu */}
             <Sheet>
               <SheetTrigger asChild className="md:hidden">
+                
                 <Button variant="ghost" size="icon">
                   <Menu className="h-5 w-5" />
                 </Button>

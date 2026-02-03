@@ -1,6 +1,7 @@
 import axios, { AxiosError, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE || 'http://localhost:5000';
+const DEV_DISABLE_AUTO_LOGOUT = import.meta.env.VITE_DEV_DISABLE_AUTO_LOGOUT === 'true';
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -67,6 +68,12 @@ apiClient.interceptors.response.use(
   async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
     const refreshToken = getRefreshToken();
+
+    // In development mode with auto-logout disabled, don't attempt token refresh
+    if (DEV_DISABLE_AUTO_LOGOUT) {
+      console.warn('[DEV MODE] Auto-logout is disabled. Token expiration errors will not trigger refresh.');
+      return Promise.reject(error);
+    }
 
     if (error.response?.status === 401 && !originalRequest._retry && refreshToken) {
       if (isRefreshing) {
