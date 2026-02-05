@@ -7,6 +7,7 @@ import { productsApi, categoriesApi } from '@/api/products';
 import { apiClient } from '@/api/client';
 import { ShoppingBag, Truck, Clock, Shield, ArrowRight } from 'lucide-react';
 import { Product } from '@/api/types';
+import { ProductCardAddToCart } from '@/components/ProductCardAddToCart';
 
 type CategoryType = { _id: string; name: string; image?: string | { url?: string } };
 
@@ -124,12 +125,9 @@ const CategorySlider = ({ category }: { category: CategoryType }) => {
                 <h4 className="text-m font-medium text-gray-800 line-clamp-2">{product.name}</h4>
                 <div className="flex items-center justify-between mt-1">
                   <span className="text-m font-semibold text-primary">₹{product.price}</span>
-                  <button
-                    className="text-sm mt-2 px-3 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    Add
-                  </button>
+                  <div onClick={(e) => e.stopPropagation()}>
+                    <ProductCardAddToCart productId={product._id} productStock={product.stock} size="sm" />
+                  </div>
                 </div>
               </div>
             </div>
@@ -176,7 +174,7 @@ const Home = () => {
   const { data: homeSliders } = useQuery({
     queryKey: ['home-sliders'],
     queryFn: async () => {
-      const res = await apiClient.get('/home-sliders');
+      const res = await apiClient.get('/api/v1/home-sliders');
       return res.data;
     },
     // keep cached for a minute
@@ -361,9 +359,7 @@ const Home = () => {
                           <span className="text-sm text-muted-foreground ml-2"> {product.unit}</span>
                         )}
                       </div>
-                      <Button size="sm" className="btn-primary">
-                        Add
-                      </Button>
+                      <ProductCardAddToCart productId={product._id} productStock={product.stock} size="sm" />
                     </div>
                   </div>
                 </Card>

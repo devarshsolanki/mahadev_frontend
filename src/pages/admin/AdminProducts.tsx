@@ -137,8 +137,13 @@ const AdminProducts = () => {
     },
   });
 
+type UpdateProductVariables = {
+  id: string;
+  data: FormData | ProductUpdatePayload;
+};
+
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: FormData | ProductUpdatePayload }) => adminApi.updateProduct(id, data),
+    mutationFn: ({ id, data }: UpdateProductVariables) => adminApi.updateProduct(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-products'] });
       queryClient.invalidateQueries({ queryKey: ['admin-stats'] }); // Refresh dashboard stats
@@ -146,7 +151,7 @@ const AdminProducts = () => {
       setEditingProduct(null);
       resetForm();
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error(error.message || 'Failed to update product');
     },
   });
@@ -169,9 +174,35 @@ const AdminProducts = () => {
 
   const handleSubmit = async () => {
     // For new products, validate all required fields
-    if (!editingProduct && (!formData.name || !formData.price || !formData.mrp || !formData.stock || !formData.category)) {
-      toast.error('Please fill all required fields');
-      return;
+    if (!editingProduct) {
+      if (!formData.name || !formData.name.trim()) {
+        toast.error('Product name is required');
+        return;
+      }
+      if (!formData.description || !formData.description.trim()) {
+        toast.error('Description is required');
+        return;
+      }
+      if (!formData.price || Number(formData.price) < 0) {
+        toast.error('Valid price is required');
+        return;
+      }
+      if (!formData.mrp || Number(formData.mrp) < 0) {
+        toast.error('Valid MRP is required');
+        return;
+      }
+      if (!formData.stock || Number(formData.stock) < 0) {
+        toast.error('Stock must be a positive number');
+        return;
+      }
+      if (!formData.category) {
+        toast.error('Category is required');
+        return;
+      }
+      if (!formData.unit || !formData.unit.trim()) {
+        toast.error('Unit is required');
+        return;
+      }
     }
 
     // For editing, only validate fields that have been changed
@@ -517,11 +548,12 @@ const ProductForm = ({ formData, setFormData, categories, onSubmit, isSubmitting
       </div>
 
       <div>
-        <Label htmlFor="description">Description</Label>
+        <Label htmlFor="description">Description *</Label>
         <Textarea
           id="description"
           value={formData.description}
           onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+          placeholder="Enter product description..."
           rows={3}
         />
       </div>
@@ -555,13 +587,14 @@ const ProductForm = ({ formData, setFormData, categories, onSubmit, isSubmitting
             type="number"
             value={formData.stock}
             onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
+            placeholder="Enter quantity"
           />
         </div>
         <div>
           <Label htmlFor="unit">Unit *</Label>
           <Input
             id="unit"
-            placeholder="e.g., 1kg, 500g"
+            placeholder="e.g., 1kg, 500g, 1L"
             value={formData.unit}
             onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
           />

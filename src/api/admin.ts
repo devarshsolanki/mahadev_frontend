@@ -116,7 +116,7 @@ export const adminApi = {
     return response.data;
   },
 
-  updateProduct: async (id: string, payload: ProductUpdatePayload) => {
+  updateProduct: async (id: string, payload: FormData | ProductUpdatePayload) => {
     let requestPayload: any;
 
     if (payload instanceof FormData) {
