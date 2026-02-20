@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus, Minus, Loader2 } from 'lucide-react';
+import { Plus, Minus, Loader2, ShoppingCart } from 'lucide-react';
 import { cartApi } from '@/api/cart';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -149,20 +149,28 @@ export const ProductCardAddToCart = ({
 
   // Show Add button if not in cart
   if (currentQuantity === 0) {
+    const isLoading = addToCartMutation.isPending || isInitializing;
+    const disabled = isLoading || productStock === 0;
+
     return (
       <Button
         size={size}
         className={`btn-primary ${className}`}
         onClick={handleAddToCart}
-        disabled={addToCartMutation.isPending || isInitializing || productStock === 0}
+        disabled={disabled}
       >
-        {addToCartMutation.isPending || isInitializing ? (
+        {isLoading ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             Adding...
           </>
+        ) : productStock === 0 ? (
+          'Unavailable'
         ) : (
-          'Add'
+          <>
+            <ShoppingCart className="mr-2 h-4 w-4" />
+            Add to Cart
+          </>
         )}
       </Button>
     );
@@ -170,18 +178,18 @@ export const ProductCardAddToCart = ({
 
   // Show quantity controls if already in cart
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-8 bg-[#39b8396e] rounded-full">
       <Button
         variant="outline"
         size={size === 'sm' ? 'sm' : 'lg'}
-        className={`h-8 w-8 p-0 ${className}`}
+        className={`h-6 w-8 p-0  ${className}`}
         onClick={handleDecrease}
         disabled={updateQuantityMutation.isPending}
         title="Decrease quantity"
       >
-        <Minus className="h-3 w-3" />
+        <Minus className="h-2 w-2" />
       </Button>
-      <span className="w-6 text-center font-semibold text-sm">{currentQuantity}</span>
+      <span className="w-8 text-center font-semibold text-lg">{currentQuantity}</span>
       <Button
         variant="outline"
         size={size === 'sm' ? 'sm' : 'lg'}

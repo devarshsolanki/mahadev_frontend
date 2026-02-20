@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { productsApi, categoriesApi } from '@/api/products';
@@ -27,18 +27,69 @@ const Products = () => {
   const minPrice = searchParams.get('minPrice') || '';
   const maxPrice = searchParams.get('maxPrice') || '';
 
+  // helper to convert the ``sort`` query param into backend-friendly values
+  const parseSort = (value: string) => {
+    // default behaviour mirrors existing UI defaults
+    let sortBy = 'name';
+    let order: 'asc' | 'desc' = 'asc';
+
+    if (value.startsWith('-')) {
+      sortBy = value.slice(1);
+      order = 'desc';
+    } else {
+      sortBy = value;
+      order = 'asc';
+    }
+
+    return { sortBy, order };
+  };
+
   const { data: productsData, isLoading: productsLoading } = useQuery({
     queryKey: ['products', category, searchQuery, sort, minPrice, maxPrice],
-    queryFn: () =>
-      productsApi.getProducts({
+    queryFn: () => {
+      const { sortBy, order } = parseSort(sort);
+
+      return productsApi.getProducts({
         category: category || undefined,
         search: searchQuery || undefined,
-        sort,
+        sortBy,
+        order,
         minPrice: minPrice ? Number(minPrice) : undefined,
         maxPrice: maxPrice ? Number(maxPrice) : undefined,
         inStock: true,
-      }),
+      });
+    },
   });
+
+  // also apply the same sort locally so that the list updates instantly and
+  // to cover the case where backend might not respect the parameter
+  const sortedProducts = useMemo<Product[]>(() => {
+    const list = productsData?.data ? [...productsData.data] : [];
+    if (!list.length) return list;
+
+    const { sortBy, order } = parseSort(sort);
+
+    list.sort((a: Product, b: Product) => {
+      const va = (a as any)[sortBy];
+      const vb = (b as any)[sortBy];
+
+      if (va == null && vb == null) return 0;
+      if (va == null) return order === 'asc' ? -1 : 1;
+      if (vb == null) return order === 'asc' ? 1 : -1;
+
+      if (typeof va === 'number' && typeof vb === 'number') {
+        return order === 'asc' ? va - vb : vb - va;
+      }
+
+      const sa = String(va).toLowerCase();
+      const sb = String(vb).toLowerCase();
+      if (sa < sb) return order === 'asc' ? -1 : 1;
+      if (sa > sb) return order === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+    return list;
+  }, [productsData?.data, sort]);
 
   const { data: categories } = useQuery({
     queryKey: ['categories'],
@@ -75,7 +126,7 @@ const Products = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 bg-[#E1E9C9]">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-4">Products</h1>
@@ -194,85 +245,118 @@ const Products = () => {
             </Card>
           ))}
         </div>
-      ) : !productsData?.data || productsData.data.length === 0 ? (
+      ) : !sortedProducts || sortedProducts.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-lg text-muted-foreground">No products found</p>
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
-          {productsData.data.map((product: Product) => (
-            <Card
-              key={product._id}
-              className="overflow-hidden group cursor-pointer card-hover"
-            >
-              <div
-                onClick={() => navigate(`/products/${product._id}`)}
-                className="aspect-square bg-muted relative overflow-hidden"
-              >
-                {product.images?.[0] ? (
-                  <img
-                    src={
-                      Array.isArray(product.images) && product.images.length
-                        ? (typeof product.images[0] === 'string' ? product.images[0] : (product.images[0] as any).url)
-                        : undefined
-                    }
-                    alt={product.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <ShoppingCart className="h-16 w-16 text-muted-foreground/20" />
-                  </div>
-                )}
-                {product.discount > 0 && (
-                  <div className="absolute top-2 right-2 bg-destructive text-destructive-foreground px-2 py-1 rounded-md text-xs font-semibold shadow-md">
-                    {product.discount}% OFF
-                  </div>
-                )}
-                {product.stock === 0 && (
-                  <div className="absolute inset-0 bg-background/80 flex items-center justify-center">
-                    <Badge variant="destructive">Out of Stock</Badge>
-                  </div>
-                )}
-              </div>
-              <div className="p-4 space-y-3">
-                <div onClick={() => navigate(`/products/${product._id}`)}>
-                  <h3 className="font-semibold line-clamp-2 mb-1">{product.name}</h3>
-                  <p className="text-xs text-muted-foreground">{product.unit}</p>
-                </div>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <span className="text-lg font-bold text-primary">
-                        ₹{product.price}
-                        {product.unit && (
-                          <span className="text-sm text-muted-foreground ml-2">/ {product.unit}</span>
-                        )}
-                      </span>
-                      {product.mrp > product.price && (
-                        <span className="text-sm text-muted-foreground line-through ml-2">₹{product.mrp}</span>
-                      )}
-                    </div>
-                </div>
-                <Button
-                  size="sm"
-                  className="w-full btn-primary"
-                  disabled={product.stock === 0 || addingToCart === product._id}
-                  onClick={() => handleAddToCart(product._id)}
-                >
-                  {addingToCart === product._id ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Adding...
-                    </>
-                  ) : (
-                    <>
-                      <ShoppingCart className="mr-2 h-4 w-4" />
-                      Add to Cart
-                    </>
-                  )}
-                </Button>
-              </div>
-            </Card>
+          {sortedProducts.map((product: Product) => (
+           <Card
+  key={product._id}
+  className="group overflow-hidden rounded-2xl border bg-background hover:shadow-md transition duration-200 flex flex-col"
+>
+  {/* IMAGE */}
+  <div
+    onClick={() => navigate(`/products/${product._id}`)}
+    className="relative aspect-square bg-muted overflow-hidden"
+  >
+    {product.images?.[0] ? (
+      <img
+        src={
+          typeof product.images[0] === "string"
+            ? product.images[0]
+            : product.images[0]?.url
+        }
+        alt={product.name}
+        className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+      />
+    ) : (
+      <div className="w-full h-full flex items-center justify-center">
+        <ShoppingCart className="h-14 w-14 text-muted-foreground/30" />
+      </div>
+    )}
+
+    {/* Discount */}
+    {product.discount > 0 && (
+      <span className="absolute top-2 left-2 bg-red-500 text-white text-[11px] font-semibold px-2 py-1 rounded-md shadow">
+        {product.discount}% OFF
+      </span>
+    )}
+    {product.mrp > product.price && (
+    <span className="absolute top-2 right-2 bg-green-600 text-white text-[11px] font-bold px-2.5 py-1 rounded-md shadow-lg ring-2 ring-white/80">
+      Save ₹{product.mrp - product.price}
+    </span>
+  )}
+
+    {/* Stock */}
+    {product.stock === 0 && (
+      <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+        <span className="bg-white text-red-600 text-xs font-semibold px-3 py-1 rounded-full">
+          Out of Stock
+        </span>
+      </div>
+    )}
+  </div>
+
+  {/* CONTENT */}
+  <div className="p-3 flex flex-col flex-1 bg-[#9af19a36]">
+    {/* Title */}
+    <div
+      onClick={() => navigate(`/products/${product._id}`)}
+      className="mb-1 min-h-[1rem]"
+    >
+      <h3 className="text-sm font-medium leading-snug line-clamp-2">
+        {product.name}
+      </h3>
+      {product.unit && (
+        <p className="text-xs text-muted-foreground mt-0.5">
+          {product.unit}
+        </p>
+      )}
+    </div>
+
+    {/* Price Block */}
+    <div className="mb-3">
+      <div className="flex items-end gap-2 flex-wrap">
+        <span className="text-lg font-bold text-primary whitespace-nowrap">
+          ₹{product.price}
+        </span>
+
+        {product.mrp > product.price && (
+          <span className="text-sm text-muted-foreground line-through whitespace-nowrap">
+            ₹{product.mrp}
+          </span>
+        )}
+      </div>
+    </div>
+
+    {/* CTA */}
+    <Button
+      size="sm"
+      className="w-full mt-auto font-medium"
+      disabled={product.stock === 0 || addingToCart === product._id}
+      onClick={(e) => {
+        e.stopPropagation();
+        handleAddToCart(product._id);
+      }}
+    >
+      {addingToCart === product._id ? (
+        <>
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          Adding...
+        </>
+      ) : product.stock === 0 ? (
+        "Unavailable"
+      ) : (
+        <>
+          <ShoppingCart className="mr-2 h-4 w-4" />
+          Add to Cart
+        </>
+      )}
+    </Button>
+  </div>
+</Card>
           ))}
         </div>
       )}

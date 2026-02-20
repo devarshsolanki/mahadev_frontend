@@ -92,45 +92,91 @@ const CategorySlider = ({ category }: { category: CategoryType }) => {
           <div className="text-gray-500 text-sm italic px-4 py-8">No products in this category</div>
         ) : (
           productList.map((product) => (
-            <div
-              key={product._id}
-              className="w-40 sm:w-44 md:w-48 h-84 bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 flex-shrink-0 overflow-hidden cursor-pointer snap-start select-none group "
-              onClick={() => (window.location.href = `/products/${product._id}`)}
-              draggable={false}
-            >
-              {/* Product Image */}
-              <div className="h-40 bg-gray-50 relative overflow-hidden">
-                {product.images?.[0] ? (
-                  <img
-                    src={
-                      Array.isArray(product.images) && product.images.length
-                        ? (typeof product.images[0] === 'string'
-                          ? product.images[0]
-                          : (product.images[0] as any).url)
-                        : '/placeholder.svg'
-                    }
-                    alt={product.name}
-                    className="w-full h-full object-cover transition-transform duration-300 "
-                    draggable={false}
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-400">
-                    No Image
-                  </div>
-                )}
-              </div>
+           <div
+  key={product._id}
+  className="w-44 sm:w-48 md:w-52 bg-white border rounded-2xl hover:shadow-md transition flex-shrink-0 snap-start overflow-hidden group"
+  onClick={() => (window.location.href = `/products/${product._id}`)}
+  draggable={false}
+>
+  {/* IMAGE */}
+  <div className="relative aspect-square bg-gray-50 overflow-hidden">
+  {product.images?.[0] ? (
+    <img
+      src={
+        typeof product.images[0] === "string"
+          ? product.images[0]
+          : product.images[0]?.url
+      }
+      alt={product.name}
+      className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+      draggable={false}
+    />
+  ) : (
+    <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
+      No Image
+    </div>
+  )}
 
-              {/* Product Info */}
-              <div className="p-3 flex flex-col justify-between h-[calc(100%-10rem)]">
-                <h4 className="text-m font-medium text-gray-800 line-clamp-2">{product.name}</h4>
-                <div className="flex items-center justify-between mt-1">
-                  <span className="text-m font-semibold text-primary">₹{product.price}</span>
-                  <div onClick={(e) => e.stopPropagation()}>
-                    <ProductCardAddToCart productId={product._id} productStock={product.stock} size="sm" />
-                  </div>
-                </div>
-              </div>
-            </div>
+  {/* % DISCOUNT (top left) */}
+  {product.discount > 0 && (
+    <span className="absolute top-2 left-2 bg-red-500 text-white text-[11px] font-semibold px-2 py-1 rounded-md shadow">
+      {product.discount}% OFF
+    </span>
+  )}
+
+  {/* SAVE AMOUNT (top right highlighted) */}
+  {product.mrp > product.price && (
+    <span className="absolute top-2 right-2 bg-green-600 text-white text-[11px] font-bold px-2.5 py-1 rounded-md shadow-lg ring-2 ring-white/80">
+      Save ₹{product.mrp - product.price}
+    </span>
+  )}
+
+  {/* STOCK */}
+  {product.stock === 0 && (
+    <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+      <span className="bg-white text-red-600 text-xs font-semibold px-3 py-1 rounded-full">
+        Out of Stock
+      </span>
+    </div>
+  )}
+</div>
+
+  {/* CONTENT */}
+  <div className="p-3 flex flex-col  bg-[#9af19a36]">
+    <h4 className="text-sm font-medium text-gray-800 line-clamp-2 min-h-[1rem]">
+      {product.name}
+    </h4>
+
+    {product.unit && (
+      <p className="text-xs text-gray-500 mt-0.5">{product.unit}</p>
+    )}
+
+    {/* PRICE */}
+    <div className="mt-1">
+  <div className="flex items-end gap-2 flex-wrap">
+    <span className="text-xl font-bold text-primary whitespace-nowrap">
+      ₹{product.price}
+    </span>
+
+    {product.mrp > product.price && (
+      <span className="text-xs text-gray-400 line-through whitespace-nowrap">
+        ₹{product.mrp}
+      </span>
+    )}
+  </div>
+</div>
+
+    {/* ADD BUTTON */}
+    <div className="mt-2" onClick={(e) => e.stopPropagation()}>
+      <ProductCardAddToCart
+        productId={product._id}
+        productStock={product.stock}
+        size="sm"
+        className="w-full h-9 text-sm font-medium"
+      />
+    </div>
+  </div>
+</div>
           ))
         )}
       </div>
@@ -205,7 +251,7 @@ const Home = () => {
   ];
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-[#E1E9C9]">
       {/* Hero Section */}
       <section className="relative h-[280px] sm:h-[280px] md:h-[400px] overflow-hidden">
         {/* Background Slider */}
@@ -233,8 +279,8 @@ const Home = () => {
                 <br />
                 Delivered Fast
               </h1>
-              <p className="text-sm sm:text-lg md:text-xl mb-6 sm:mb-8 text-white/90">
-                Shop for high-quality groceries from the comfort of your <br/>home. Fast delivery, great prices, and fresh products.
+              <p className="text-sm sm:text-lg md:text-xl mb-6 sm:mb-8 text-white/90 max-w-xl">
+                Shop for high-quality groceries from the comfort of your home. Fast delivery, great prices, and fresh products.
               </p>
               <div className="flex flex-row gap-3 sm:gap-4 justify-left px-0">
                 <Button
@@ -273,10 +319,10 @@ const Home = () => {
                 className="relative h-36 cursor-pointer overflow-hidden rounded-xl card-hover"
                 style={{
                   backgroundImage: `url(${category.image
-                      ? typeof category.image === "string"
-                        ? category.image
-                        : (category.image as any).url
-                      : "/placeholder.svg"
+                    ? typeof category.image === "string"
+                      ? category.image
+                      : (category.image as any).url
+                    : "/placeholder.svg"
                     })`,
                   backgroundSize: "cover",
                   backgroundPosition: "center",
@@ -320,46 +366,67 @@ const Home = () => {
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-3 sm:gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
               {featuredProducts?.data?.slice(0, 8).map((product: Product) => (
                 <Card
                   key={product._id}
-                  className="overflow-hidden cursor-pointer card-hover"
+                  className="group overflow-hidden rounded-2xl border bg-background hover:shadow-md transition-all duration-200"
                   onClick={() => navigate(`/products/${product._id}`)}
                 >
-                  <div className="aspect-square bg-muted relative">
-                    {product.images?.[0] && (
-                      <img
-                        src={
-                          Array.isArray(product.images) && product.images.length
-                            ? (typeof product.images[0] === 'string' ? product.images[0] : (product.images[0] as any).url)
-                            : '/placeholder.svg'
-                        }
-                        alt={product.name}
-                        className="w-full h-full object-cover"
-                      />
-                    )}
+                  {/* Image */}
+                  <div className="relative aspect-square bg-muted">
+                    <img
+                      src={
+                        Array.isArray(product.images) && product.images.length
+                          ? (typeof product.images[0] === 'string'
+                            ? product.images[0]
+                            : product.images[0]?.url)
+                          : '/placeholder.svg'
+                      }
+                      alt={product.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                    />
+
                     {product.discount > 0 && (
-                      <div className="absolute top-2 right-2 bg-destructive text-destructive-foreground px-2 py-1 rounded-md text-xs font-semibold">
+                      <span className="absolute top-2 left-2 bg-red-500 text-white text-[11px] font-semibold px-2 py-1 rounded-md">
                         {product.discount}% OFF
-                      </div>
+                      </span>
                     )}
                   </div>
-                  <div className="p-4">
-                    <h3 className="font-semibold mb-2 line-clamp-2">{product.name}</h3>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <span className="text-lg font-bold text-primary">
-                          ₹{product.price}
-                          {product.mrp > product.price && (
-                            <span className="text-sm text-muted-foreground line-through ml-2">₹{product.mrp}</span>
-                          )}
+
+                  {/* Content */}
+                  <div className="p-3 space-y-2  bg-[#9af19a36]">
+                    {/* Title */}
+                    <h3 className="text-sm font-medium leading-snug line-clamp-2 min-h-[1.6rem]">
+                      {product.name}
+                    </h3>
+
+                    {/* Unit */}
+                    {product.unit && (
+                      <p className="text-xs text-muted-foreground">{product.unit}</p>
+                    )}
+
+                    {/* Price block */}
+                    <div className="flex items-baseline gap-2 flex-wrap">
+                      <span className="text-base font-bold text-primary whitespace-nowrap">
+                        ₹{product.price}
+                      </span>
+
+                      {product.mrp > product.price && (
+                        <span className="text-xs text-muted-foreground line-through whitespace-nowrap">
+                          ₹{product.mrp}
                         </span>
-                        {product.unit && (
-                          <span className="text-sm text-muted-foreground ml-2"> {product.unit}</span>
-                        )}
-                      </div>
-                      <ProductCardAddToCart productId={product._id} productStock={product.stock} size="sm" />
+                      )}
+                    </div>
+
+                    {/* Add button FULL WIDTH */}
+                    <div onClick={(e) => e.stopPropagation()}>
+                      <ProductCardAddToCart
+                        productId={product._id}
+                        productStock={product.stock}
+                        size="sm"
+                        className="w-full h-9 text-sm font-medium"
+                      />
                     </div>
                   </div>
                 </Card>

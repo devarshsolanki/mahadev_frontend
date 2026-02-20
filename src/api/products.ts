@@ -9,6 +9,9 @@ export const productsApi = {
     maxPrice?: number;
     inStock?: boolean;
     sort?: string;
+    // new backend-compatible fields
+    sortBy?: string;
+    order?: 'asc' | 'desc';
     page?: number;
     limit?: number;
   }) => {

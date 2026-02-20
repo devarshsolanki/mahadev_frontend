@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { useAuth } from '@/context/AuthContext';
 import { authApi } from '@/api/auth';
 import { toast } from 'sonner';
-import { Loader2, ArrowLeft } from 'lucide-react';
+import { Loader2, ArrowLeft, Link } from 'lucide-react';
 import toE164 from '@/utils/phone';
 
 const Auth = () => {
@@ -100,7 +100,7 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center gradient-subtle p-4">
-      <Card className="w-full max-w-md shadow-lg">
+      <Card className="w-full max-w-md shadow-lg  bg-[#b5f3b536]">
         <CardHeader className="space-y-1">
           <div className="flex items-center mb-4">
             {step !== 'phone' && (
@@ -113,8 +113,10 @@ const Auth = () => {
                 <ArrowLeft className="h-4 w-4" />
               </Button>
             )}
-            <div className="h-10 w-10 rounded-lg gradient-hero" />
-            <span className="ml-2 text-xl font-bold">Mahadev shop</span>
+            <div className="flex items-center space-x-2">
+                        <img src="./favicon.ico" alt="Mahadev Shop" className="h-12 w-15  sm:block rounded-lg" />
+                        <span className="md:text-xl   font-bold">Mahadev Shop</span>
+                      </div>
           </div>
           <CardTitle className="text-2xl">
             {step === 'phone' && (authMode === 'login' ? 'Login' : 'Create Account')}
