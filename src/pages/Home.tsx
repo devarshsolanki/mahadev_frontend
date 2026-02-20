@@ -144,11 +144,11 @@ const Home = () => {
 
   // Add your slider images here
   const sliderImages = [
-    'https://www.shutterstock.com/image-photo/hand-holding-trolley-icon-full-260nw-2228613733.jpg',
-    'https://demo.themagnifico.net/grocery-supermarket/wp-content/themes/grocery-supermarket-pro/assets/images/slides/slide1.png',
-    'https://food-ubc.b-cdn.net/wp-content/uploads/2020/02/Save-Money-On-Groceries_UBC-Food-Services.jpg',
-    'https://starindojapan.com/wp-content/uploads/2018/08/slider2.jpg',
-    'https://i0.wp.com/mostafa-supermarket.com/wp-content/uploads/2018/08/slider1.jpg?w=960&ssl=1',
+    'https://img.freepik.com/free-photo/supermarket-banner-concept-with-ingredients_23-2149421147.jpg?semt=ais_hybrid&w=740&q=80',
+    'https://res.cloudinary.com/dyxjqw88z/image/upload/v1770281366/slider_axc85o.jpg',
+    'https://img.freepik.com/free-photo/supermarket-banner-concept-with-ingredients_23-2149421132.jpg?semt=ais_hybrid&w=740&q=80',
+    'https://img.freepik.com/premium-photo/helping-with-groceries-christmas-easter-food-banner-with-bank-charity-donations_817921-41231.jpg?semt=ais_hybrid&w=740&q=80',
+    'https://img.freepik.com/premium-photo/white-phone-basket-with-green-background_950053-23424.jpg?semt=ais_hybrid&w=740&q=80',
 
   ];
 
@@ -225,18 +225,18 @@ const Home = () => {
         ))}
 
         {/* Content */}
-        <div className="relative z-10 h-full flex items-center justify-center text-white text-center">
+        <div className="relative z-10 h-full flex items-left justify-left text-white text-center md:text-left">
           <div className="container mx-auto px-4">
-            <div className="max-w-3xl mx-auto animate-fade-in">
+            <div className="max-w-6xl mt-10 mx-auto animate-fade-in">
               <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold mb-4 sm:mb-6 text-green-50">
                 Fresh Groceries
                 <br />
                 Delivered Fast
               </h1>
               <p className="text-sm sm:text-lg md:text-xl mb-6 sm:mb-8 text-white/90">
-                Shop for high-quality groceries from the comfort of your home. Fast delivery, great prices, and fresh products.
+                Shop for high-quality groceries from the comfort of your <br/>home. Fast delivery, great prices, and fresh products.
               </p>
-              <div className="flex flex-row gap-3 sm:gap-4 justify-center px-4">
+              <div className="flex flex-row gap-3 sm:gap-4 justify-left px-0">
                 <Button
                   size="sm"
                   variant="secondary"

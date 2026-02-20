@@ -182,7 +182,7 @@ const Products = () => {
 
       {/* Products Grid */}
       {productsLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
           {[...Array(8)].map((_, i) => (
             <Card key={i} className="overflow-hidden">
               <Skeleton className="aspect-square" />
@@ -199,7 +199,7 @@ const Products = () => {
           <p className="text-lg text-muted-foreground">No products found</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
           {productsData.data.map((product: Product) => (
             <Card
               key={product._id}
