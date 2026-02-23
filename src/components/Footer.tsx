@@ -39,7 +39,7 @@ export const Footer = () => {
             {/* Brand Section */}
             <div className="lg:col-span-1">
               <div className="flex items-center space-x-2 mb-4">
-                <img src="./public/favicon.ico" alt="Mahadev Shop" className="h-10 w-10 rounded-lg" />
+                <img src="./favicon.ico" alt="Mahadev Shop" className="h-10 w-10 rounded-lg" />
                 <h3 className="text-xl font-bold">Mahadev Shop</h3>
               </div>
               <p className="text-gray-400 text-sm mb-6">
