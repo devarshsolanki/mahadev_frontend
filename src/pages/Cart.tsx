@@ -100,7 +100,7 @@ const Cart = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 bg-[#dce4d3b2]">
       <h1 className="text-3xl font-bold mb-8">Shopping Cart</h1>
 
       <div className="grid lg:grid-cols-3 gap-8">

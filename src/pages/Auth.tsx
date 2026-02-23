@@ -99,8 +99,8 @@ const Auth = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center gradient-subtle p-4">
-      <Card className="w-full max-w-md shadow-lg  bg-[#b5f3b536]">
+    <div className="min-h-screen flex items-center justify-center gradient-subtle p-4 ">
+      <Card className="w-full max-w-md shadow-lg  bg-[#08ff0836]">
         <CardHeader className="space-y-1">
           <div className="flex items-center mb-4">
             {step !== 'phone' && (

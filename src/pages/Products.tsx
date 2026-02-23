@@ -2,7 +2,6 @@ import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { productsApi, categoriesApi } from '@/api/products';
-import { cartApi } from '@/api/cart';
 import { Product } from '@/api/types';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,16 +9,15 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { toast } from 'sonner';
-import { Search, Filter, Loader2, ShoppingCart } from 'lucide-react';
+import { Search, Filter, ShoppingCart } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { ProductCardAddToCart } from '@/components/ProductCardAddToCart';
 
 const Products = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
-  const [addingToCart, setAddingToCart] = useState<string | null>(null);
 
   const category = searchParams.get('category') || '';
   const ALL_CATEGORY_VALUE = '__all';
@@ -107,26 +105,8 @@ const Products = () => {
     setSearchParams(params);
   };
 
-  const handleAddToCart = async (productId: string) => {
-    if (!isAuthenticated) {
-      toast.error('Please login to add items to cart');
-      navigate('/auth');
-      return;
-    }
-
-    setAddingToCart(productId);
-    try {
-      await cartApi.addToCart(productId, 1);
-      toast.success('Added to cart!');
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to add to cart');
-    } finally {
-      setAddingToCart(null);
-    }
-  };
-
   return (
-    <div className="container mx-auto px-4 py-8 bg-[#E1E9C9]">
+    <div className="container mx-auto px-4 py-8 bg-[#dce4d3b2]">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-4">Products</h1>
@@ -332,29 +312,14 @@ const Products = () => {
     </div>
 
     {/* CTA */}
-    <Button
-      size="sm"
-      className="w-full mt-auto font-medium"
-      disabled={product.stock === 0 || addingToCart === product._id}
-      onClick={(e) => {
-        e.stopPropagation();
-        handleAddToCart(product._id);
-      }}
-    >
-      {addingToCart === product._id ? (
-        <>
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          Adding...
-        </>
-      ) : product.stock === 0 ? (
-        "Unavailable"
-      ) : (
-        <>
-          <ShoppingCart className="mr-2 h-4 w-4" />
-          Add to Cart
-        </>
-      )}
-    </Button>
+    <div onClick={(e) => e.stopPropagation()}>
+      <ProductCardAddToCart
+        productId={product._id}
+        productStock={product.stock}
+        size="sm"
+        className="w-full h-10 text-sm font-medium"
+      />
+    </div>
   </div>
 </Card>
           ))}

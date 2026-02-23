@@ -84,7 +84,7 @@ const OrderDetail = () => {
   const canCancel = ['pending', 'confirmed'].includes(orderData.status);
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 bg-[#dce4d3b2]">
       <Button variant="ghost" onClick={() => navigate('/orders')} className="mb-6">
         <ArrowLeft className="mr-2 h-4 w-4" />
         Back to Orders

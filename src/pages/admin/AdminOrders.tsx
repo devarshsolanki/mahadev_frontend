@@ -161,8 +161,8 @@ const AdminOrders = () => {
                       {order.items?.map((item: any, index: number) => (
                         <div key={index} className="h-12 w-12 flex-shrink-0 rounded border bg-muted overflow-hidden">
                           <img
-                            src={item.product?.images?.[0] || '/placeholder.png'}
-                            alt={item.product?.name}
+                            src={item.product?.images?.[0]?.url || '/placeholder.png'}
+                            alt={item.product?.images?.[0]?.alt || item.product?.name}
                             className="h-full w-full object-cover"
                           />
                         </div>

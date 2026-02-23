@@ -1,3 +1,4 @@
+import React, { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -38,12 +39,25 @@ const queryClient = new QueryClient({
   },
 });
 
+/* utility component that automatically scrolls the page to top whenever
+the current location pathname changes.  Placing it at the router/layout
+level ensures every navigation (links, buttons, programmatic) resets scroll*/
+const ScrollToTop = () => {
+  const { pathname, search } = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname, search]);
+  return null;
+};
+
 const AppContent = () => {
   const location = useLocation();
   const isAuthPage = location.pathname === '/auth';
 
   return (
     <div className="min-h-screen flex flex-col">
+      {/* scroll handler must be mounted inside the router */}
+      <ScrollToTop />
       <Navbar />
       <main className="flex-1">
         <ErrorBoundary>

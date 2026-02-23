@@ -90,7 +90,7 @@ const Checkout = () => {
 
   if (!cartData || cartData.items.length === 0) {
     return (
-      <div className="container mx-auto px-4 py-16">
+      <div className="container mx-auto px-4 py-16 ">
         <Card className="max-w-md mx-auto p-8 text-center">
           <h2 className="text-2xl font-bold mb-2">Cart is empty</h2>
           <p className="text-muted-foreground mb-6">Add items to your cart before checkout</p>
@@ -101,7 +101,7 @@ const Checkout = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 bg-[#dce4d3b2]">
       <h1 className="text-3xl font-bold mb-8">Checkout</h1>
 
       <div className="grid lg:grid-cols-3 gap-8">

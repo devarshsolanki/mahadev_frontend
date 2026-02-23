@@ -150,7 +150,7 @@ const CreateSubscription = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background py-8">
+    <div className="min-h-screen py-8 bg-[#dce4d3b2]">
       <div className="container max-w-7xl mx-auto px-4">
         {/* Header */}
         <div className="mb-6">

@@ -172,8 +172,8 @@ const OrderDetailsDialog = ({ order, open, onOpenChange }: OrderDetailsDialogPro
                                                 <div className="flex items-center gap-3">
                                                     <div className="h-10 w-10 rounded border bg-muted overflow-hidden flex-shrink-0">
                                                         <img
-                                                            src={item.product?.images?.[0] || '/placeholder.png'}
-                                                            alt={item.product?.name}
+                                                            src={item.product?.images?.[0]?.url || '/placeholder.png'}
+                                                            alt={item.product?.images?.[0]?.alt || item.product?.name}
                                                             className="h-full w-full object-cover"
                                                         />
                                                     </div>

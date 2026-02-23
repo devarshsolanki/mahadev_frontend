@@ -30,7 +30,7 @@ const Categories = () => {
   const categoryList = categories?.data || [];
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-6">
+    <div className="container mx-auto px-4 py-8 space-y-6 bg-[#dce4d3b2]">
       <h1 className="text-3xl font-bold mb-6">Shop by Category</h1>
 
       {/* Main Category Grid */}

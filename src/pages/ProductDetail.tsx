@@ -2,22 +2,20 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { productsApi } from '@/api/products';
-import { cartApi } from '@/api/cart';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
-import { ArrowLeft, ShoppingCart, Minus, Plus, Loader2 } from 'lucide-react';
+import { ArrowLeft, ShoppingCart } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { SubscriptionDialog } from '@/components/subscription/SubscriptionDialog';
+import { ProductCardAddToCart } from '@/components/ProductCardAddToCart';
 
 const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
-  const [quantity, setQuantity] = useState(1);
-  const [addingToCart, setAddingToCart] = useState(false);
   const [subscriptionDialogOpen, setSubscriptionDialogOpen] = useState(false);
 
   const { data: product, isLoading } = useQuery({
@@ -25,25 +23,6 @@ const ProductDetail = () => {
     queryFn: () => productsApi.getProductById(id!),
     enabled: !!id,
   });
-
-  const handleAddToCart = async () => {
-    if (!isAuthenticated) {
-      toast.error('Please login to add items to cart');
-      navigate('/auth');
-      return;
-    }
-
-    setAddingToCart(true);
-    try {
-      await cartApi.addToCart(product!.data._id, quantity);
-      toast.success('Added to cart!');
-      navigate('/cart');
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to add to cart');
-    } finally {
-      setAddingToCart(false);
-    }
-  };
 
   if (isLoading) {
     return (
@@ -156,52 +135,27 @@ const ProductDetail = () => {
             )}
           </div>
 
-          {/* Quantity Selector */}
+          {/* Quantity & Add to Cart Controls */}
           {productData.stock > 0 && (
             <div className="space-y-4">
               <div>
-                <label className="text-sm font-medium mb-2 block">Quantity</label>
-                <div className="flex items-center gap-4">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  >
-                    <Minus className="h-4 w-4" />
-                  </Button>
-                  <span className="text-xl font-semibold w-12 text-center">{quantity}</span>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => setQuantity(Math.min(productData.stock, quantity + 1))}
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
+                <label className="text-sm font-medium mb-2 block">Add to Cart</label>
+                <ProductCardAddToCart
+                  productId={productData._id}
+                  productStock={productData.stock}
+                  size="lg"
+                  className="w-full h-12 text-base font-semibold"
+                  onAddSuccess={() => {
+                    toast.success('Added to cart!');
+                  }}
+                />
               </div>
 
               <div className="flex gap-4">
                 <Button
                   size="lg"
-                  className="flex-1 btn-primary"
-                  disabled={addingToCart}
-                  onClick={handleAddToCart}
-                >
-                  {addingToCart ? (
-                    <>
-                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                      Adding...
-                    </>
-                  ) : (
-                    <>
-                      <ShoppingCart className="mr-2 h-5 w-5" />
-                      Add to Cart
-                    </>
-                  )}
-                </Button>
-                <Button
-                  size="lg"
                   variant="outline"
+                  className="flex-1"
                   onClick={() => {
                     if (!isAuthenticated) {
                       toast.error('Please login to subscribe');
@@ -225,7 +179,7 @@ const ProductDetail = () => {
           open={subscriptionDialogOpen}
           onOpenChange={setSubscriptionDialogOpen}
           product={productData}
-          initialQuantity={quantity}
+          initialQuantity={1}
         />
       )}
     </div>

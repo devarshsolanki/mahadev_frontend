@@ -251,7 +251,7 @@ const Home = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-[#E1E9C9]">
+    <div className="min-h-screen bg-[#dce4d3b2]">
       {/* Hero Section */}
       <section className="relative h-[280px] sm:h-[280px] md:h-[400px] overflow-hidden">
         {/* Background Slider */}
@@ -352,7 +352,7 @@ const Home = () => {
       </section>
 
       {/* Featured Products */}
-      <section className="py-8 bg-muted/50">
+      <section className="py-8 bg-muted/70">
         <div className="container mx-auto px-4">
           <div className="text-center mb-6">
             <h2 className="text-3xl font-bold mb-2">Most Ordered Products</h2>
