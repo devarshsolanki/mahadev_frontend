@@ -54,6 +54,8 @@ const CategorySlider = ({ category }: { category: CategoryType }) => {
 
   const productList: Product[] = products?.data || [];
 
+  const navigate = useNavigate();
+
   return (
     <div className="mt-10 relative">
       {/* Category Title */}
@@ -95,7 +97,7 @@ const CategorySlider = ({ category }: { category: CategoryType }) => {
            <div
   key={product._id}
   className="w-44 sm:w-48 md:w-52 bg-white border rounded-2xl hover:shadow-md transition flex-shrink-0 snap-start overflow-hidden group"
-  onClick={() => (window.location.href = `/products/${product._id}`)}
+  onClick={() => navigate(`/products/${product._id}`)}
   draggable={false}
 >
   {/* IMAGE */}

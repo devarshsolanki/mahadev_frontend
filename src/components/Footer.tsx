@@ -40,7 +40,7 @@ export const Footer = () => {
             <div className="lg:col-span-1">
               <div className="flex items-center space-x-2 mb-4">
                 <img src="./favicon.ico" alt="Mahadev Shop" className="h-10 w-10 rounded-lg" />
-                <h3 className="text-xl font-bold">Mahadev Shop</h3>
+                <h3 className="text-xl font-bold">Mahadev Mart</h3>
               </div>
               <p className="text-gray-400 text-sm mb-6">
                 Your trusted online marketplace for quality products delivered right to your door.

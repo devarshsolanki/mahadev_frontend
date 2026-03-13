@@ -60,7 +60,7 @@ export const Navbar = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
             <img src="./favicon.ico" alt="Mahadev Shop" className="h-12 w-15  sm:block rounded-lg" />
-            <span className="md:text-xl   font-bold">Mahadev Shop</span>
+            <span className="md:text-xl   font-bold">Mahadev Mart</span>
           </Link>
 
           {/* Desktop Nav Links */}

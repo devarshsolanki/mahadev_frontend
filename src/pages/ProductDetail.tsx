@@ -26,14 +26,16 @@ const ProductDetail = () => {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="grid md:grid-cols-2 gap-8">
-          <Skeleton className="aspect-square rounded-lg" />
-          <div className="space-y-4">
-            <Skeleton className="h-8 w-3/4" />
-            <Skeleton className="h-6 w-1/2" />
-            <Skeleton className="h-20 w-full" />
-            <Skeleton className="h-12 w-full" />
+      <div className="min-h-screen bg-[#f0f4f0]">
+        <div className="container mx-auto px-4 py-8">
+          <div className="grid md:grid-cols-2 gap-8">
+            <Skeleton className="aspect-square rounded-lg" />
+            <div className="space-y-4">
+              <Skeleton className="h-8 w-3/4" />
+              <Skeleton className="h-6 w-1/2" />
+              <Skeleton className="h-20 w-full" />
+              <Skeleton className="h-12 w-full" />
+            </div>
           </div>
         </div>
       </div>
@@ -42,13 +44,15 @@ const ProductDetail = () => {
 
   if (!product?.data) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <Card className="p-8 text-center">
-          <p className="text-lg text-muted-foreground">Product not found</p>
-          <Button onClick={() => navigate('/products')} className="mt-4">
-            Back to Products
-          </Button>
-        </Card>
+      <div className="min-h-screen bg-[#f0f4f0]">
+        <div className="container mx-auto px-4 py-8">
+          <Card className="p-8 text-center">
+            <p className="text-lg text-muted-foreground">Product not found</p>
+            <Button onClick={() => navigate('/products')} className="mt-4">
+              Back to Products
+            </Button>
+          </Card>
+        </div>
       </div>
     );
   }
@@ -56,7 +60,8 @@ const ProductDetail = () => {
   const productData = product.data;
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen bg-[#f0f4f0]">
+      <div className="container mx-auto px-4 py-8">
       <Button
         variant="ghost"
         onClick={() => navigate(-1)}
@@ -182,6 +187,7 @@ const ProductDetail = () => {
           initialQuantity={1}
         />
       )}
+      </div>
     </div>
   );
 };

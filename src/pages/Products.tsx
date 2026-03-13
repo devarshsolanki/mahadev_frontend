@@ -106,9 +106,10 @@ const Products = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 bg-[#dce4d3b2]">
-      {/* Header */}
-      <div className="mb-8">
+    <div className="min-h-screen bg-[#f0f4f0]">
+      <div className="container mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="mb-8">
         <h1 className="text-3xl font-bold mb-4">Products</h1>
         
         {/* Search & Filters */}
@@ -325,6 +326,7 @@ const Products = () => {
           ))}
         </div>
       )}
+      </div>
     </div>
   );
 };
