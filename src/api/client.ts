@@ -1,6 +1,6 @@
 import axios, { AxiosError, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE || 'http://localhost:5000';
+const API_BASE_URL = import.meta.env.VITE_API_BASE || 'https://mahadev-backend.onrender.com';
 const DEV_DISABLE_AUTO_LOGOUT = import.meta.env.VITE_DEV_DISABLE_AUTO_LOGOUT === 'true';
 
 export const apiClient = axios.create({
