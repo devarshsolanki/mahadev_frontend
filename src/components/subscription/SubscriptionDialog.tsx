@@ -64,13 +64,11 @@ export function SubscriptionDialog({
     const [customerNotes, setCustomerNotes] = useState('');
 
     // Fetch user profile for addresses
-    const { data: userData, isLoading: loadingAddresses } = useQuery({
-        queryKey: ['profile'],
-        queryFn: authApi.getProfile,
+    const { data: addresses = [], isLoading: loadingAddresses } = useQuery({
+        queryKey: ['addresses'],
+        queryFn: authApi.getAddresses,
         enabled: open, // Only fetch when dialog is open
     });
-
-    const addresses = userData?.data?.addresses || [];
 
     // Set default address
     useEffect(() => {

@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { cartApi } from '@/api/cart';
 import { checkoutApi } from '@/api/orders';
 import { authApi } from '@/api/auth';
+import { Address } from '@/api/types';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -29,10 +30,26 @@ const Checkout = () => {
     queryFn: cartApi.getCart,
   });
 
-  const { data: user } = useQuery({
-    queryKey: ['profile'],
-    queryFn: authApi.getProfile,
+  const {
+    data: addresses = [],
+    isLoading: isLoadingAddresses,
+    isError: hasAddressLoadError,
+  } = useQuery<Address[]>({
+    queryKey: ['addresses'],
+    queryFn: authApi.getAddresses,
   });
+
+  useEffect(() => {
+    if (addresses.length === 0) {
+      setSelectedAddress('');
+      return;
+    }
+
+    if (addresses.some(address => address._id === selectedAddress)) return;
+
+    const defaultAddress = addresses.find(address => address.isDefault);
+    setSelectedAddress(defaultAddress?._id || addresses[0]._id || '');
+  }, [addresses, selectedAddress]);
 
   const { data: deliverySlots } = useQuery({
     queryKey: ['delivery-slots'],
@@ -60,8 +77,23 @@ const Checkout = () => {
   });
 
   const handlePlaceOrder = () => {
+    if (isLoadingAddresses) {
+      toast.error('Please wait while your delivery addresses load.');
+      return;
+    }
+
+    if (hasAddressLoadError) {
+      toast.error('Could not load your delivery addresses. Please try again.');
+      return;
+    }
+
+    if (addresses.length === 0) {
+      toast.error('Add a delivery address in your profile before placing this order.');
+      return;
+    }
+
     if (!selectedAddress) {
-      toast.error('Please select a delivery address');
+      toast.error('Please select a delivery address for this order.');
       return;
     }
 
@@ -85,7 +117,6 @@ const Checkout = () => {
     });
   };
 
-  const addresses = user?.data?.addresses || [];
   const cartData = cart?.data;
 
   if (!cartData || cartData.items.length === 0) {
@@ -113,21 +144,37 @@ const Checkout = () => {
               Delivery Address
             </h2>
 
-            {addresses.length === 0 ? (
+            {isLoadingAddresses ? (
+              <div className="flex items-center justify-center gap-2 py-4 text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Loading delivery addresses...
+              </div>
+            ) : hasAddressLoadError ? (
               <div className="text-center py-4">
-                <p className="text-muted-foreground mb-4">No addresses saved</p>
+                <p className="text-muted-foreground mb-4">
+                  Could not load delivery addresses. Please try again.
+                </p>
+                <Button variant="outline" onClick={() => queryClient.invalidateQueries({ queryKey: ['addresses'] })}>
+                  Retry
+                </Button>
+              </div>
+            ) : addresses.length === 0 ? (
+              <div className="text-center py-4">
+                <p className="text-muted-foreground mb-4">
+                  No delivery address found. Add one to place your order.
+                </p>
                 <Button onClick={() => navigate('/profile')}>Add Address</Button>
               </div>
             ) : (
               <RadioGroup value={selectedAddress} onValueChange={setSelectedAddress}>
                 <div className="space-y-3">
-                  {addresses.map((address: any) => (
+                  {addresses.map((address) => (
                     <div key={address._id} className="flex items-start space-x-3 p-3 border rounded-lg">
                       <RadioGroupItem value={address._id} id={address._id} />
                       <Label htmlFor={address._id} className="flex-1 cursor-pointer">
                         <div className="font-medium">{address.label}</div>
                         <div className="text-sm text-muted-foreground mt-1">
-                          {address.addressLine1}, {address.addressLine2 && `${address.addressLine2}, `}
+                          {address.fullAddress}{address.landmark && `, ${address.landmark}, `}
                           {address.city}, {address.state} - {address.pincode}
                         </div>
                       </Label>
@@ -266,7 +313,13 @@ const Checkout = () => {
               size="lg"
               className="w-full btn-primary"
               onClick={handlePlaceOrder}
-              disabled={createOrderMutation.isPending || !selectedAddress}
+              disabled={
+                createOrderMutation.isPending ||
+                isLoadingAddresses ||
+                hasAddressLoadError ||
+                addresses.length === 0 ||
+                !selectedAddress
+              }
             >
               {createOrderMutation.isPending ? (
                 <>

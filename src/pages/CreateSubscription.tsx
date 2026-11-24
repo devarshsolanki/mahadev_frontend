@@ -55,9 +55,9 @@ const CreateSubscription = () => {
   });
 
   // Fetch user profile for addresses
-  const { data: userData } = useQuery({
-    queryKey: ['profile'],
-    queryFn: authApi.getProfile
+  const { data: addresses = [] } = useQuery({
+    queryKey: ['addresses'],
+    queryFn: authApi.getAddresses
   });
 
   // Create subscription mutation
@@ -74,7 +74,6 @@ const CreateSubscription = () => {
   });
 
   const products = productsData?.data || [];
-  const addresses = userData?.data?.addresses || [];
 
   // Add item to subscription
   const addItem = (productId: string) => {
@@ -535,8 +534,8 @@ const CreateSubscription = () => {
                           <div className="flex-1 min-w-0">
                             <p className="font-medium text-sm capitalize">{address.label}</p>
                             <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                              {address.addressLine1}
-                              {address.addressLine2 && `, ${address.addressLine2}`}
+                              {address.fullAddress}
+                              {address.landmark && `, ${address.landmark}`}
                             </p>
                             <p className="text-xs text-muted-foreground">
                               {address.city}, {address.pincode}

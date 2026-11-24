@@ -179,8 +179,8 @@ const OrderDetail = () => {
             <div className="bg-muted/50 p-4 rounded-lg">
               <p className="font-medium mb-1">{orderData.deliveryAddress.label}</p>
               <p className="text-sm text-muted-foreground">
-                {orderData.deliveryAddress.addressLine1}
-                {orderData.deliveryAddress.addressLine2 && `, ${orderData.deliveryAddress.addressLine2}`}
+                {orderData.deliveryAddress.fullAddress}
+                {orderData.deliveryAddress.landmark && `, ${orderData.deliveryAddress.landmark}`}
               </p>
               <p className="text-sm text-muted-foreground">
                 {orderData.deliveryAddress.city}, {orderData.deliveryAddress.state} - {orderData.deliveryAddress.pincode}

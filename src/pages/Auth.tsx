@@ -1,224 +1,290 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { FormEvent, useEffect, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { GoogleLogin } from '@react-oauth/google';
+import { ArrowLeft, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/context/AuthContext';
-import { authApi } from '@/api/auth';
-import { toast } from 'sonner';
-import { Loader2, ArrowLeft, Link } from 'lucide-react';
-import toE164 from '@/utils/phone';
+
+type AuthStep = 'email' | 'otp';
 
 const Auth = () => {
-  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
-  const [step, setStep] = useState<'phone' | 'otp'>('phone');
-  const [phone, setPhone] = useState('');
+  const [step, setStep] = useState<AuthStep>('email');
+  const [email, setEmail] = useState('');
   const [otp, setOtp] = useState('');
-  const [name, setName] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [tempAuthData, setTempAuthData] = useState<any>(null);
+  const [resendSeconds, setResendSeconds] = useState(0);
+  const [isSending, setIsSending] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [isResending, setIsResending] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
-  const { login, completeRegistration } = useAuth();
+  const {
+    sendOtp,
+    verifyOtp,
+    resendOtp,
+    googleLogin,
+  } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
-  const handleSendOTP = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const fullPhone = toE164(phone, '91');
-    if (!/^\+?[1-9]\d{9,14}$/.test(fullPhone)) {
-      toast.error('Please enter a valid phone number');
+  const getReturnPath = () => {
+    const from = (location.state as { from?: { pathname?: string; search?: string; hash?: string } } | null)?.from;
+    return from?.pathname && from.pathname !== '/complete-profile'
+      ? `${from.pathname}${from.search ?? ''}${from.hash ?? ''}`
+      : '/';
+  };
+
+  useEffect(() => {
+    if (resendSeconds <= 0) return undefined;
+    const timer = window.setTimeout(() => setResendSeconds(seconds => seconds - 1), 1000);
+    return () => window.clearTimeout(timer);
+  }, [resendSeconds]);
+
+  const showError = (error: unknown, fallback: string) => {
+    const message = error instanceof Error ? error.message : fallback;
+    setErrorMessage(message);
+    toast.error(message);
+  };
+
+  const handleSendOtp = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+      setErrorMessage('Enter a valid email address.');
       return;
     }
 
-    setIsLoading(true);
+    setIsSending(true);
+    setErrorMessage('');
     try {
-      await authApi.sendOTP(fullPhone);
-      toast.success('OTP sent successfully!');
+      await sendOtp(normalizedEmail);
+      setEmail(normalizedEmail);
+      setOtp('');
       setStep('otp');
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to send OTP');
+      setResendSeconds(60);
+    } catch (error) {
+      showError(error, 'Could not send the verification code. Try again.');
     } finally {
-      setIsLoading(false);
+      setIsSending(false);
     }
   };
 
-  const handleVerifyOTP = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (otp.length !== 6) {
-      toast.error('Please enter a valid 6-digit OTP');
+  const handleVerifyOtp = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!/^\d{6}$/.test(otp)) {
+      setErrorMessage('Enter the 6-digit code sent to your email.');
       return;
     }
 
-    setIsLoading(true);
+    setIsVerifying(true);
+    setErrorMessage('');
     try {
-      const fullPhone = toE164(phone, '91');
-      const data = await login(fullPhone, otp, authMode === 'signup' ? name : undefined);
-      if (data.isNewUser) {
-        if (authMode === 'login') {
-          toast.error("Account not found. Please create an account.");
-          setStep('phone');
-          setAuthMode('signup');
-          return;
-        }
-        navigate('/');
-      } else {
-        if (authMode === 'signup') {
-          toast.error("Account already exists. Please log in.");
-          setStep('phone');
-          setAuthMode('login');
-          return;
-        }
-        navigate('/');
-      }
-    } catch (error: any) {
-      // Error is already handled in login function
+      const response = await verifyOtp(email, otp);
+      toast.success(response.isNewUser ? 'Email verified. Welcome!' : 'Signed in successfully.');
+      navigate(response.user.isProfileComplete ? getReturnPath() : '/complete-profile', {
+        replace: true,
+        state: { from: location.state?.from },
+      });
+    } catch (error) {
+      showError(error, 'Could not verify the code. Check it and try again.');
     } finally {
-      setIsLoading(false);
+      setIsVerifying(false);
     }
   };
 
-  const handleResendOTP = async () => {
-    setIsLoading(true);
+  const handleResendOtp = async () => {
+    setIsResending(true);
+    setErrorMessage('');
     try {
-      const fullPhone = toE164(phone, '91');
-      await authApi.resendOTP(fullPhone);
-      toast.success('OTP resent successfully!');
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to resend OTP');
+      await resendOtp(email);
+      setOtp('');
+      setResendSeconds(60);
+      toast.success('A new code has been sent to your email.');
+    } catch (error) {
+      showError(error, 'Could not resend the code. Try again.');
     } finally {
-      setIsLoading(false);
+      setIsResending(false);
     }
   };
 
-  const resetForm = () => {
-    setStep('phone');
-    setPhone('');
+  const handleGoogleSuccess = async (idToken: string) => {
+    setIsGoogleLoading(true);
+    setErrorMessage('');
+    try {
+      const response = await googleLogin(idToken);
+      toast.success(response.isNewUser ? 'Google account connected. Welcome!' : 'Signed in with Google.');
+      navigate(response.user.isProfileComplete ? getReturnPath() : '/complete-profile', {
+        replace: true,
+        state: { from: location.state?.from },
+      });
+    } catch (error) {
+      showError(error, 'Google sign-in failed. Please try again.');
+    } finally {
+      setIsGoogleLoading(false);
+    }
+  };
+
+  const changeEmail = () => {
+    setStep('email');
     setOtp('');
-    setName('');
-  }
+    setResendSeconds(0);
+    setErrorMessage('');
+  };
+
+  const googleButton = googleClientId ? (
+    <GoogleLogin
+      onSuccess={(credentialResponse) => {
+        if (!credentialResponse.credential) {
+          setErrorMessage('Google did not return an ID token. Please try again.');
+          return;
+        }
+        void handleGoogleSuccess(credentialResponse.credential);
+      }}
+      onError={() => setErrorMessage('Google sign-in could not be started. Please try again.')}
+      text="continue_with"
+      shape="rectangular"
+      width="360"
+    />
+  ) : (
+    <Button type="button" variant="outline" className="w-full" disabled>
+      Continue with Google (not configured)
+    </Button>
+  );
 
   return (
-    <div className="min-h-screen flex items-center justify-center gradient-subtle p-4 ">
-      <Card className="w-full max-w-md shadow-lg  bg-[#08ff0836]">
+    <div className="min-h-screen flex items-center justify-center gradient-subtle p-4">
+      <Card className="w-full max-w-md shadow-lg bg-[#08ff0836]">
         <CardHeader className="space-y-1">
           <div className="flex items-center mb-4">
-            {step !== 'phone' && (
+            {step === 'otp' && (
               <Button
+                type="button"
                 variant="ghost"
                 size="sm"
-                onClick={() => setStep(step === 'otp' ? 'phone' : 'otp')}
+                onClick={changeEmail}
                 className="mr-2"
+                aria-label="Change email"
               >
                 <ArrowLeft className="h-4 w-4" />
               </Button>
             )}
             <div className="flex items-center space-x-2">
-                        <img src="./favicon.ico" alt="Mahadev Shop" className="h-12 w-15  sm:block rounded-lg" />
-                        <span className="md:text-xl   font-bold">Mahadev Shop</span>
-                      </div>
+              <img src="/favicon.ico" alt="Mahadev Shop" className="h-12 w-15 rounded-lg" />
+              <span className="md:text-xl font-bold">Mahadev Shop</span>
+            </div>
           </div>
           <CardTitle className="text-2xl">
-            {step === 'phone' && (authMode === 'login' ? 'Login' : 'Create Account')}
-            {step === 'otp' && 'Enter OTP'}
+            {step === 'email' ? 'Welcome back' : 'Check your email'}
           </CardTitle>
           <CardDescription>
-            {step === 'phone' && (authMode === 'login' ? 'Enter your phone number to login' : 'Enter your details to create an account')}
-            {step === 'otp' && `Enter the OTP sent to +91${phone}`}
+            {step === 'email'
+              ? 'Sign in or create an account with your email address.'
+              : `Enter the 6-digit code sent to ${email}.`}
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          {step === 'phone' && (
-            <form onSubmit={handleSendOTP} className="space-y-4">
-              {authMode === 'signup' && (
-                <div className="space-y-2">
-                  <Label htmlFor="name">Full Name</Label>
-                  <Input
-                    id="name"
-                    type="text"
-                    placeholder="John Doe"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    required
-                  />
-                </div>
-              )}
-              <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number</Label>
-                <div className="flex items-center">
-                  <span className="p-2 border border-r-0 rounded-l-md bg-gray-100">+91</span>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    placeholder="9876543210"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                    required
-                    className="rounded-l-none"
-                  />
-                </div>
-              </div>
-              <Button type="submit" className="w-full btn-primary" disabled={isLoading}>
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Sending OTP...
-                  </>
-                ) : (
-                  'Send OTP'
-                )}
-              </Button>
-              <p className="text-sm text-center">
-                {authMode === 'login' ? "Don't have an account?" : "Already have an account?"}{' '}
-                <Button
-                  variant="link"
-                  onClick={() => {
-                    setAuthMode(authMode === 'login' ? 'signup' : 'login');
-                    resetForm();
-                  }}
-                >
-                  {authMode === 'login' ? 'Sign up' : 'Login'}
-                </Button>
-              </p>
-            </form>
+        <CardContent className="space-y-5">
+          {errorMessage && (
+            <p className="text-sm text-destructive" role="alert">
+              {errorMessage}
+            </p>
           )}
 
-          {step === 'otp' && (
-            <form onSubmit={handleVerifyOTP} className="space-y-4">
+          {step === 'email' ? (
+            <>
+              <form onSubmit={handleSendOtp} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email address</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    autoComplete="email"
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(event) => {
+                      setEmail(event.target.value);
+                      setErrorMessage('');
+                    }}
+                    required
+                  />
+                </div>
+                <Button type="submit" className="w-full btn-primary" disabled={isSending || isGoogleLoading}>
+                  {isSending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Sending code...
+                    </>
+                  ) : 'Send code'}
+                </Button>
+              </form>
+
+              <div className="flex items-center gap-3" aria-hidden="true">
+                <div className="h-px flex-1 bg-border" />
+                <span className="text-xs uppercase text-muted-foreground">or</span>
+                <div className="h-px flex-1 bg-border" />
+              </div>
+
+              <div className={isGoogleLoading ? 'pointer-events-none opacity-60' : ''}>
+                {googleClientId ? (
+                  googleButton
+                ) : googleButton}
+              </div>
+              {isGoogleLoading && (
+                <p className="text-sm text-center text-muted-foreground">
+                  <Loader2 className="inline mr-2 h-4 w-4 animate-spin" />
+                  Signing in with Google...
+                </p>
+              )}
+            </>
+          ) : (
+            <form onSubmit={handleVerifyOtp} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="otp">OTP</Label>
+                <Label htmlFor="otp">6-digit code</Label>
                 <Input
                   id="otp"
                   type="text"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
                   placeholder="123456"
                   value={otp}
-                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  onChange={(event) => {
+                    setOtp(event.target.value.replace(/\D/g, '').slice(0, 6));
+                    setErrorMessage('');
+                  }}
                   maxLength={6}
                   required
                 />
-                <p className="text-xs text-muted-foreground">
-                  In development mode, check console for OTP
-                </p>
               </div>
-              <Button type="submit" className="w-full btn-primary" disabled={isLoading}>
-                {isLoading ? (
+              <Button type="submit" className="w-full btn-primary" disabled={isVerifying || isResending}>
+                {isVerifying ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Verifying...
                   </>
-                ) : (
-                  'Verify OTP'
-                )}
+                ) : 'Verify and continue'}
               </Button>
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full"
-                onClick={handleResendOTP}
-                disabled={isLoading}
-              >
-                Resend OTP
-              </Button>
+              <div className="flex items-center justify-between text-sm">
+                <Button type="button" variant="link" className="px-0" onClick={changeEmail}>
+                  Change email
+                </Button>
+                <Button
+                  type="button"
+                  variant="link"
+                  className="px-0"
+                  onClick={handleResendOtp}
+                  disabled={resendSeconds > 0 || isResending || isVerifying}
+                >
+                  {isResending
+                    ? 'Sending...'
+                    : resendSeconds > 0
+                      ? `Resend code in ${resendSeconds}s`
+                      : 'Resend code'}
+                </Button>
+              </div>
             </form>
           )}
         </CardContent>

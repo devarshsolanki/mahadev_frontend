@@ -1,52 +1,81 @@
 import { apiClient, formatApiError } from './client';
-import { ApiResponse, AuthResponse, User } from './types';
-import { AxiosPromise } from 'axios';
+import { Address, AuthResponse, User } from './types';
+import { AxiosResponse } from 'axios';
 
-/**
- * A generic request handler to reduce boilerplate.
- * It handles the try-catch block, formats errors, and normalizes the response payload.
- */
 async function handleRequest<T>(
-  request: AxiosPromise<ApiResponse<T>>,
-  payloadSelector: (data: ApiResponse<T> | T) => T = (data: any) => data.data ?? data.user ?? data
+  request: Promise<AxiosResponse<unknown>>,
+  selectPayload: (response: Record<string, unknown>) => T
 ) {
   try {
     const { data } = await request;
-    const payload = payloadSelector(data);
-    return { success: true, data: payload };
+    return selectPayload(data as Record<string, unknown>);
   } catch (error) {
     throw new Error(formatApiError(error));
   }
 }
 
-export const authApi = {
-  sendOTP: async (phone: string) => {
-    return handleRequest(apiClient.post('/api/v1/auth/send-otp', { phone }));
-  },
+const selectAuthResponse = (response: Record<string, unknown>) =>
+  response as unknown as AuthResponse;
 
-  verifyOTP: async (phone: string, otp: string, name?: string) => {
-    // verify-otp returns tokens and isNewUser at the top-level of the response.
-    // Use a payloadSelector that returns the full response object so callers
-    // (like AuthContext.login) receive accessToken/refreshToken/isNewUser/user.
-    return handleRequest<AuthResponse>(
-      apiClient.post('/api/v1/auth/verify-otp', {
-        phone,
-        otp,
-        name,
-      }),
-      // return the entire response payload instead of only nested `data.user`
-      (data) => data as any
+const selectUser = (response: Record<string, unknown>) =>
+  (response.user ?? response.data) as User;
+
+const selectAddresses = (response: Record<string, unknown>) =>
+  response.data as Address[];
+
+export const authApi = {
+  sendOtp: async (email: string) => {
+    return handleRequest(
+      apiClient.post('/api/v1/auth/send-otp', { email }),
+      (response) => response
     );
   },
 
-  resendOTP: async (phone: string) => {
-    return handleRequest(apiClient.post('/api/v1/auth/resend-otp', { phone }));
+  verifyOtp: async (email: string, otp: string) => {
+    return handleRequest(
+      apiClient.post('/api/v1/auth/verify-otp', { email, otp }),
+      selectAuthResponse
+    );
   },
 
-  getProfile: async () => handleRequest<User>(apiClient.get('/api/v1/auth/profile')),
+  resendOtp: async (email: string) => {
+    return handleRequest(
+      apiClient.post('/api/v1/auth/resend-otp', { email }),
+      (response) => response
+    );
+  },
 
-  updateProfile: async (profileData: Partial<User>) =>
-    handleRequest<User>(apiClient.put('/api/v1/auth/profile', profileData)),
+  googleLogin: async (idToken: string) => {
+    return handleRequest(
+      apiClient.post('/api/v1/auth/google', { idToken }),
+      selectAuthResponse
+    );
+  },
 
-  logout: async () => handleRequest(apiClient.post('/api/v1/auth/logout')),
+  completeProfile: async (name: string, phone: string) => {
+    return handleRequest(
+      apiClient.put('/api/v1/auth/complete-profile', { name, phone }),
+      selectUser
+    );
+  },
+
+  getProfile: async () => handleRequest(
+    apiClient.get('/api/v1/auth/profile'),
+    selectUser
+  ),
+
+  getAddresses: async () => handleRequest(
+    apiClient.get('/api/v1/auth/addresses'),
+    selectAddresses
+  ),
+
+  updateProfile: async (profileData: Partial<User>) => handleRequest(
+    apiClient.put('/api/v1/auth/profile', profileData),
+    selectUser
+  ),
+
+  logout: async () => handleRequest(
+    apiClient.post('/api/v1/auth/logout'),
+    (response) => response
+  ),
 };

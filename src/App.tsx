@@ -11,6 +11,7 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import Home from "./pages/Home";
 import Auth from "./pages/Auth";
+import CompleteProfile from "./pages/CompleteProfile";
 import Products from "./pages/Products";
 import ProductDetail from "./pages/ProductDetail";
 import Cart from "./pages/Cart";
@@ -64,6 +65,14 @@ const AppContent = () => {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/auth" element={<Auth />} />
+            <Route
+              path="/complete-profile"
+              element={
+                <ProtectedRoute allowIncompleteProfile>
+                  <CompleteProfile />
+                </ProtectedRoute>
+              }
+            />
             <Route path="/products" element={<Products />} />
             <Route path="/products/:id" element={<ProductDetail />} />
             <Route path="/categories" element={<Categories />} />

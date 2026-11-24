@@ -7,11 +7,14 @@ export interface ApiResponse<T> {
 
 // Auth Types
 export interface User {
-  id: string;
-  phone: string;
-  name: string;
-  email?: string;
-  role: 'customer' | 'admin';
+  _id: string;
+  id?: string;
+  email: string;
+  name?: string;
+  phone?: string;
+  isProfileComplete: boolean;
+  authProvider: 'email' | 'google';
+  role: 'customer' | 'admin' | 'super_admin' | 'delivery_partner';
   addresses?: Address[];
   isActive: boolean;
   createdAt: string;
@@ -20,19 +23,23 @@ export interface User {
 export interface Address {
   _id?: string;
   label: string;
-  addressLine1: string;
-  addressLine2?: string;
+  fullAddress: string;
+  landmark?: string;
   city: string;
   state: string;
   pincode: string;
   isDefault: boolean;
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface AuthResponse {
   user: User;
   accessToken: string;
   refreshToken: string;
-  isNewUser?: boolean;
+  isNewUser: boolean;
+  success: boolean;
+  message: string;
 }
 
 // Product Types

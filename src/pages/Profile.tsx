@@ -2,7 +2,9 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { authApi } from '@/api/auth';
+import { Address, User as UserProfile } from '@/api/types';
 import { walletApi } from '@/api/wallet';
+import { useAuth } from '@/context/AuthContext';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,8 +17,10 @@ import { User, Mail, Phone, MapPin, Plus, Edit, Trash2, Loader2, Wallet as Walle
 const Profile = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { updateUser } = useAuth();
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isAddingAddress, setIsAddingAddress] = useState(false);
+  const [editingAddressId, setEditingAddressId] = useState<string | null>(null);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [addressForm, setAddressForm] = useState({
@@ -29,9 +33,14 @@ const Profile = () => {
     isDefault: false,
   });
 
-  const { data: user, isLoading } = useQuery({
+  const { data: user, isLoading } = useQuery<UserProfile>({
     queryKey: ['profile'],
     queryFn: authApi.getProfile,
+  });
+
+  const { data: addresses = [], isLoading: isLoadingAddresses } = useQuery<Address[]>({
+    queryKey: ['addresses'],
+    queryFn: authApi.getAddresses,
   });
 
   // Fetch wallet data
@@ -41,9 +50,13 @@ const Profile = () => {
   });
 
   const updateProfileMutation = useMutation({
-    mutationFn: (data: any) => authApi.updateProfile(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['profile'] });
+    mutationFn: (data: Partial<UserProfile>) => authApi.updateProfile(data),
+    onSuccess: async (updatedUser) => {
+      updateUser(updatedUser);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['profile'] }),
+        queryClient.invalidateQueries({ queryKey: ['user'] }),
+      ]);
       toast.success('Profile updated successfully');
       setIsEditingProfile(false);
     },
@@ -52,23 +65,34 @@ const Profile = () => {
     },
   });
 
-  const addAddressMutation = useMutation({
-    mutationFn: (addresses: any[]) => authApi.updateProfile({ addresses }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['profile'] });
-      toast.success('Address added successfully');
+  const saveAddressMutation = useMutation({
+    mutationFn: (updatedAddresses: Address[]) => authApi.updateProfile({ addresses: updatedAddresses }),
+    onSuccess: async (updatedUser) => {
+      updateUser(updatedUser);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['profile'] }),
+        queryClient.invalidateQueries({ queryKey: ['user'] }),
+        queryClient.invalidateQueries({ queryKey: ['addresses'] }),
+      ]);
+      toast.success(editingAddressId ? 'Address updated successfully' : 'Address added successfully');
       setIsAddingAddress(false);
+      setEditingAddressId(null);
       resetAddressForm();
     },
     onError: (error: any) => {
-      toast.error(error.message || 'Failed to add address');
+      toast.error(error.message || 'Failed to save address');
     },
   });
 
   const deleteAddressMutation = useMutation({
-    mutationFn: (addresses: any[]) => authApi.updateProfile({ addresses }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['profile'] });
+    mutationFn: (updatedAddresses: Address[]) => authApi.updateProfile({ addresses: updatedAddresses }),
+    onSuccess: async (updatedUser) => {
+      updateUser(updatedUser);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['profile'] }),
+        queryClient.invalidateQueries({ queryKey: ['user'] }),
+        queryClient.invalidateQueries({ queryKey: ['addresses'] }),
+      ]);
       toast.success('Address deleted successfully');
     },
     onError: (error: any) => {
@@ -92,21 +116,23 @@ const Profile = () => {
     updateProfileMutation.mutate({ name, email });
   };
 
-  const handleAddAddress = () => {
+  const handleSaveAddress = () => {
     if (!addressForm.label || !addressForm.fullAddress || !addressForm.city || !addressForm.state || !addressForm.pincode) {
       toast.error('Please fill all required fields');
       return;
     }
 
-    const addresses = user?.data?.addresses || [];
-    addAddressMutation.mutate([...addresses, addressForm]);
+    const updatedAddresses = editingAddressId
+      ? addresses.map(address => address._id === editingAddressId
+        ? { ...address, ...addressForm }
+        : address)
+      : [...addresses, addressForm];
+    saveAddressMutation.mutate(updatedAddresses);
   };
 
   const handleDeleteAddress = (index: number) => {
     if (window.confirm('Are you sure you want to delete this address?')) {
-      const addresses = [...(user?.data?.addresses || [])];
-      addresses.splice(index, 1);
-      deleteAddressMutation.mutate(addresses);
+      deleteAddressMutation.mutate(addresses.filter((_, addressIndex) => addressIndex !== index));
     }
   };
 
@@ -120,8 +146,7 @@ const Profile = () => {
     );
   }
 
-  const userData = user?.data;
-  const addresses = userData?.addresses || [];
+  const userData = user;
 
   return (
     <div className="container mx-auto px-4 py-8 bg-[#dce4d3b2]">
@@ -230,16 +255,22 @@ const Profile = () => {
                 <MapPin className="h-5 w-5" />
                 Saved Addresses
               </h2>
-              <Dialog open={isAddingAddress} onOpenChange={setIsAddingAddress}>
+              <Dialog open={isAddingAddress} onOpenChange={(open) => {
+                setIsAddingAddress(open);
+                if (!open) setEditingAddressId(null);
+              }}>
                 <DialogTrigger asChild>
-                  <Button size="sm">
+                  <Button size="sm" onClick={() => {
+                    setEditingAddressId(null);
+                    resetAddressForm();
+                  }}>
                     <Plus className="mr-2 h-4 w-4" />
                     Add Address
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Add New Address</DialogTitle>
+                    <DialogTitle>{editingAddressId ? 'Edit Address' : 'Add New Address'}</DialogTitle>
                   </DialogHeader>
                   <div className="space-y-4">
                     <div>
@@ -295,16 +326,16 @@ const Profile = () => {
                     </div>
                     <Button
                       className="w-full"
-                      onClick={handleAddAddress}
-                      disabled={addAddressMutation.isPending}
+                      onClick={handleSaveAddress}
+                      disabled={saveAddressMutation.isPending}
                     >
-                      {addAddressMutation.isPending ? (
+                      {saveAddressMutation.isPending ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Adding...
+                          {editingAddressId ? 'Saving...' : 'Adding...'}
                         </>
                       ) : (
-                        'Add Address'
+                        editingAddressId ? 'Save Address' : 'Add Address'
                       )}
                     </Button>
                   </div>
@@ -312,12 +343,16 @@ const Profile = () => {
               </Dialog>
             </div>
 
-            {addresses.length === 0 ? (
+            {isLoadingAddresses ? (
+              <div className="flex justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              </div>
+            ) : addresses.length === 0 ? (
               <p className="text-muted-foreground text-center py-8">No addresses saved yet</p>
             ) : (
               <div className="space-y-4">
-                {addresses.map((address: any, index: number) => (
-                  <div key={index} className="p-4 border rounded-lg">
+                {addresses.map((address, index) => (
+                  <div key={address._id || index} className="p-4 border rounded-lg">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
@@ -335,6 +370,28 @@ const Profile = () => {
                       <Button
                         variant="ghost"
                         size="icon"
+                        aria-label="Edit address"
+                        onClick={() => {
+                          setEditingAddressId(address._id || null);
+                          setAddressForm({
+                            label: address.label,
+                            fullAddress: address.fullAddress,
+                            landmark: address.landmark || '',
+                            city: address.city,
+                            state: address.state,
+                            pincode: address.pincode,
+                            isDefault: address.isDefault,
+                          });
+                          setIsAddingAddress(true);
+                        }}
+                        disabled={!address._id || saveAddressMutation.isPending}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label="Delete address"
                         onClick={() => handleDeleteAddress(index)}
                         disabled={deleteAddressMutation.isPending}
                       >

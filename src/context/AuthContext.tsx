@@ -1,30 +1,35 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { User } from '@/api/types';
+import { useQueryClient } from '@tanstack/react-query';
+import { AuthResponse, User } from '@/api/types';
 import { authApi } from '@/api/auth';
 import { setTokens, clearTokens } from '@/api/client';
-import { toast } from 'sonner';
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (phone: string, otp: string, name?: string) => Promise<any>;
+  sendOtp: (email: string) => ReturnType<typeof authApi.sendOtp>;
+  verifyOtp: (email: string, otp: string) => Promise<AuthResponse>;
+  resendOtp: (email: string) => ReturnType<typeof authApi.resendOtp>;
+  googleLogin: (idToken: string) => Promise<AuthResponse>;
+  completeProfile: (name: string, phone: string) => Promise<User>;
+  updateUser: (user: User) => void;
   logout: () => Promise<void>;
   refetchUser: () => Promise<void>;
-  completeRegistration: (name: string, tempAuthData: any) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const queryClient = useQueryClient();
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const loadUser = async () => {
     try {
-      const { data } = await authApi.getProfile();
-      setUser(data);
-    } catch (error) {
+      const currentUser = await authApi.getProfile();
+      setUser(currentUser);
+    } catch {
       clearTokens();
       setUser(null);
     } finally {
@@ -36,39 +41,36 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     loadUser();
   }, []);
 
-  const login = async (phone: string, otp: string, name?: string) => {
-    try {
-      const { data } = await authApi.verifyOTP(phone, otp, name);
-      // If server returned access/refresh tokens, store them and set user regardless
-      // This covers both login and signup flows where the server issues tokens.
-      if (data.accessToken) {
-        setTokens(data.accessToken, data.refreshToken);
-        if (data.user) setUser(data.user);
-        if (data.isNewUser) {
-          toast.success('Registration successful!');
-        } else {
-          toast.success('Login successful!');
-        }
-      }
-      return data;
-    } catch (error: any) {
-      toast.error(error.message || 'Login failed');
-      throw error;
-    }
+  const acceptAuthResponse = (data: AuthResponse) => {
+    setTokens(data.accessToken, data.refreshToken);
+    setUser(data.user);
   };
 
-  const completeRegistration = async (name: string, tempAuthData: any) => {
-    try {
-      setTokens(tempAuthData.accessToken, tempAuthData.refreshToken);
-      await authApi.updateProfile({ name });
-      await loadUser();
-      toast.success('Registration successful!');
-    } catch (error: any) {
-      toast.error(error.message || 'Registration failed');
-      clearTokens();
-      setUser(null);
-      throw error;
-    }
+  const verifyOtp = async (email: string, otp: string) => {
+    const data = await authApi.verifyOtp(email, otp);
+    acceptAuthResponse(data);
+    return data;
+  };
+
+  const googleLogin = async (idToken: string) => {
+    const data = await authApi.googleLogin(idToken);
+    acceptAuthResponse(data);
+    return data;
+  };
+
+  const completeProfile = async (name: string, phone: string) => {
+    const updatedUser = await authApi.completeProfile(name, phone);
+    setUser(updatedUser);
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ['profile'] }),
+      queryClient.invalidateQueries({ queryKey: ['user'] }),
+      queryClient.invalidateQueries({ queryKey: ['addresses'] }),
+    ]);
+    return updatedUser;
+  };
+
+  const updateUser = (updatedUser: User) => {
+    setUser(updatedUser);
   };
 
   const logout = async (): Promise<void> => {
@@ -77,7 +79,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } finally {
       clearTokens();
       setUser(null);
-      toast.success('Logged out successfully');
     }
   };
 
@@ -91,10 +92,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         user,
         isAuthenticated: !!user,
         isLoading,
-        login,
+        sendOtp: authApi.sendOtp,
+        verifyOtp,
+        resendOtp: authApi.resendOtp,
+        googleLogin,
+        completeProfile,
+        updateUser,
         logout,
         refetchUser,
-        completeRegistration,
       }}
     >
       {children}
